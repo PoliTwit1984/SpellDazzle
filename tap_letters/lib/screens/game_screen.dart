@@ -6,6 +6,7 @@ import '../models/spawned_letter.dart';
 import '../services/dictionary_service.dart';
 import '../widgets/game/bottom_panel.dart';
 import '../widgets/game/letter_tile.dart';
+import '../widgets/animations/reward_animations.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -21,11 +22,17 @@ class _GameScreenState extends State<GameScreen> {
   Timer? _spawnTimer;
   Timer? _gameTimer;
   int _score = 0;
-  int _timeLeft = 30; // 30 seconds per level
+  int _timeLeft = GameConstants.roundTimeSeconds;
   int _level = 1;
   final DictionaryService _dictionaryService = DictionaryService();
   final List<Offset> _gridPositions = [];
   final List<bool> _gridOccupied = [];
+  DateTime? _lastWordTime;
+  final GlobalKey _scoreKey = GlobalKey();
+  bool _showScoreAnimation = false;
+  Offset? _lastWordPosition;
+  int _lastPoints = 0;
+  double _lastMultiplier = 1.0;
 
   @override
   void initState() {
@@ -42,22 +49,17 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _initializeGrid() {
-    const gridColumns = 4;
-    const gridRows = 6;
-    const letterSize = 60.0;
-    const spacing = 20.0;
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final screenWidth = MediaQuery.of(context).size.width;
       final screenHeight = MediaQuery.of(context).size.height;
-      final startX = (screenWidth - (gridColumns * (letterSize + spacing))) / 2;
-      final startY = 120.0; // Start below the header
+      final startX = (screenWidth - (GameConstants.gridColumns * (GameConstants.letterSize + GameConstants.gridSpacing))) / 2;
+      final startY = 120.0;
 
-      for (int row = 0; row < gridRows; row++) {
-        for (int col = 0; col < gridColumns; col++) {
-          final x = startX + col * (letterSize + spacing);
-          final y = startY + row * (letterSize + spacing);
-          if (y + letterSize < screenHeight - 200) { // Avoid bottom panel
+      for (int row = 0; row < GameConstants.gridRows; row++) {
+        for (int col = 0; col < GameConstants.gridColumns; col++) {
+          final x = startX + col * (GameConstants.letterSize + GameConstants.gridSpacing);
+          final y = startY + row * (GameConstants.letterSize + GameConstants.gridSpacing);
+          if (y + GameConstants.letterSize < screenHeight - 200) {
             _gridPositions.add(Offset(x, y));
             _gridOccupied.add(false);
           }
@@ -73,7 +75,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void _startGameTimer() {
     _gameTimer?.cancel();
-    _timeLeft = 30;
+    _timeLeft = GameConstants.roundTimeSeconds;
     _gameTimer = Timer.periodic(
       const Duration(seconds: 1),
       (timer) {
@@ -97,7 +99,7 @@ class _GameScreenState extends State<GameScreen> {
   void _startSpawning() {
     _spawnTimer?.cancel();
     _spawnTimer = Timer.periodic(
-      const Duration(milliseconds: 500),
+      Duration(milliseconds: GameConstants.spawnIntervalMs),
       (timer) {
         if (_spawnedLetters.length < GameConstants.maxSpawnedLetters) {
           _spawnLetter();
@@ -107,12 +109,11 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _spawnLetter() {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    final letter = letters[_random.nextInt(letters.length)];
     final position = _getAvailableGridPosition();
-
     if (position != null) {
       final gridIndex = _gridPositions.indexOf(position);
+      final letter = _getRandomWeightedLetter();
+      
       setState(() {
         _spawnedLetters.add(
           SpawnedLetter(
@@ -122,8 +123,7 @@ class _GameScreenState extends State<GameScreen> {
         );
         _gridOccupied[gridIndex] = true;
 
-        // Remove letter after 3 seconds if not collected
-        Future.delayed(const Duration(seconds: 3), () {
+        Future.delayed(Duration(seconds: GameConstants.letterLifetimeSeconds), () {
           setState(() {
             _spawnedLetters.removeWhere((l) => l.position == position);
             _gridOccupied[gridIndex] = false;
@@ -131,6 +131,16 @@ class _GameScreenState extends State<GameScreen> {
         });
       });
     }
+  }
+
+  String _getRandomWeightedLetter() {
+    final List<String> weightedLetters = [];
+    GameConstants.letterPool.forEach((letter, weight) {
+      for (int i = 0; i < weight; i++) {
+        weightedLetters.add(letter);
+      }
+    });
+    return weightedLetters[_random.nextInt(weightedLetters.length)];
   }
 
   Offset? _getAvailableGridPosition() {
@@ -181,9 +191,26 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  double _calculateSpeedBonus() {
+    if (_lastWordTime == null) {
+      _lastWordTime = DateTime.now();
+      return 0.0;
+    }
+
+    final now = DateTime.now();
+    final timeDiff = now.difference(_lastWordTime!).inSeconds;
+    _lastWordTime = now;
+
+    if (timeDiff > GameConstants.speedBonusTimeWindow) return 0.0;
+
+    return (GameConstants.speedBonusTimeWindow - timeDiff) / 
+           GameConstants.speedBonusTimeWindow * 
+           GameConstants.speedBonusMax;
+  }
+
   void _onSubmitWord() async {
     final word = _collectedLetters.join();
-    if (word.length < 3) return;
+    if (word.length < GameConstants.minWordLength) return;
 
     final isValid = await _dictionaryService.isValidWord(word);
 
@@ -194,18 +221,42 @@ class _GameScreenState extends State<GameScreen> {
       
       // Length bonus
       if (word.length >= 5) {
-        multiplier = 2.0;
+        multiplier = GameConstants.fiveLetterBonus;
       } else if (word.length == 4) {
-        multiplier = 1.5;
+        multiplier = GameConstants.fourLetterBonus;
       }
+
+      // Speed bonus
+      final speedBonus = _calculateSpeedBonus();
+      multiplier += speedBonus;
 
       final points = (baseScore * multiplier).round();
 
+      // Calculate center position of collected letters for animation
+      final RenderBox box = context.findRenderObject() as RenderBox;
+      final bottomPanelPosition = box.localToGlobal(Offset.zero);
+      _lastWordPosition = Offset(
+        bottomPanelPosition.dx + box.size.width / 2,
+        bottomPanelPosition.dy + box.size.height / 2,
+      );
+      
       setState(() {
         _score += points;
+        _lastPoints = points;
+        _lastMultiplier = multiplier;
+        _showScoreAnimation = true;
         _collectedLetters.clear();
         _level++;
         _startGameTimer(); // Reset timer for next level
+      });
+
+      // Reset animation flag after animation completes
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          setState(() {
+            _showScoreAnimation = false;
+          });
+        }
       });
     } else {
       _endGame();
@@ -214,24 +265,25 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isTimeLow = _timeLeft <= 5;
+    final isTimeLow = _timeLeft <= GameConstants.lowTimeThreshold;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF00C6FF),
-                  Color(0xFF0072FF),
-                ],
+      body: RewardAnimations(
+        child: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF00C6FF),
+                    Color(0xFF0072FF),
+                  ],
+                ),
               ),
             ),
-          ),
-          SafeArea(
+            SafeArea(
             child: Column(
               children: [
                 Padding(
@@ -247,12 +299,15 @@ class _GameScreenState extends State<GameScreen> {
                           color: Colors.white,
                         ),
                       ),
-                      Text(
-                        'Score: $_score',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      Container(
+                        key: _scoreKey,
+                        child: Text(
+                          'Score: $_score',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       Container(
@@ -298,7 +353,20 @@ class _GameScreenState extends State<GameScreen> {
               ],
             ),
           ),
-        ],
+          ],
+        ),
+        scoreKey: _scoreKey,
+        showConfetti: _showScoreAnimation,
+        scoreStartPosition: _lastWordPosition,
+        points: _lastPoints,
+        multiplier: _lastMultiplier,
+        onAnimationComplete: () {
+          if (mounted) {
+            setState(() {
+              _showScoreAnimation = false;
+            });
+          }
+        },
       ),
     );
   }

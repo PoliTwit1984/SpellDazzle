@@ -16,10 +16,11 @@ class GameConstants {
   static const int maxWordLength = 7;
   static const int roundTimeSeconds = 30;
   static const int lowTimeThreshold = 5;
+  static const double speedBonusTimeWindow = 5.0;
   
   // Scoring
-  static const double fourLetterMultiplier = 1.5;
-  static const double fiveLetterMultiplier = 2.0;
+  static const double fourLetterBonus = 1.5;
+  static const double fiveLetterBonus = 2.0;
   static const double speedBonusMax = 2.0;
   
   // Letter distribution
@@ -29,4 +30,7 @@ class GameConstants {
     'B': 2, 'C': 2, 'M': 2, 'P': 2, 'F': 2, 'H': 2, 'V': 2, 'W': 2, 'Y': 2,
     'K': 1, 'J': 1, 'X': 1, 'Q': 1, 'Z': 1
   };
+
+  // Dictionary
+  static const List<String> additionalWords = [];
 }

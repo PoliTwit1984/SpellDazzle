@@ -8,6 +8,8 @@ class RewardAnimations extends StatefulWidget {
   final bool showConfetti;
   final Offset? scoreStartPosition;
   final VoidCallback onAnimationComplete;
+  final int points;
+  final double multiplier;
 
   const RewardAnimations({
     super.key,
@@ -16,6 +18,8 @@ class RewardAnimations extends StatefulWidget {
     required this.showConfetti,
     this.scoreStartPosition,
     required this.onAnimationComplete,
+    required this.points,
+    required this.multiplier,
   });
 
   @override
@@ -35,7 +39,7 @@ class _RewardAnimationsState extends State<RewardAnimations> with SingleTickerPr
   void initState() {
     super.initState();
     _floatingScoreController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
@@ -44,7 +48,7 @@ class _RewardAnimationsState extends State<RewardAnimations> with SingleTickerPr
       end: 0.0,
     ).animate(CurvedAnimation(
       parent: _floatingScoreController,
-      curve: const Interval(0.5, 1.0),
+      curve: const Interval(0.7, 1.0), // Stay visible longer before fading
     ));
 
     _floatingScoreController.addStatusListener((status) {
@@ -132,18 +136,69 @@ class _RewardAnimationsState extends State<RewardAnimations> with SingleTickerPr
                 top: _floatingScorePosition.value.dy,
                 child: Opacity(
                   opacity: _floatingScoreOpacity.value,
-                  child: const Text(
-                    '+1',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFFFFD700),
-                      shadows: [
-                        Shadow(
-                          color: Colors.black26,
-                          offset: Offset(0, 1),
-                          blurRadius: 2,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFF00C6FF),
+                          Color(0xFF0072FF),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0072FF).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '+${widget.points}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black26,
+                                offset: Offset(0, 1),
+                                blurRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (widget.multiplier > 1.0) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '×${widget.multiplier.toStringAsFixed(1)}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black26,
+                                    offset: Offset(0, 1),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
