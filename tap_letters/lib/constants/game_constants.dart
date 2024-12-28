@@ -1,9 +1,9 @@
 class GameConstants {
   // Letter spawning
-  static const int maxSpawnedLetters = 8;
+  static const int maxSpawnedLetters = 12;
   static const int maxCollectedLetters = 7;
-  static const int spawnIntervalMs = 500;
-  static const int letterLifetimeSeconds = 3;
+  static const int spawnIntervalMs = 1000;
+  static const int letterLifetimeSeconds = 6;
   
   // Grid layout
   static const int gridColumns = 4;

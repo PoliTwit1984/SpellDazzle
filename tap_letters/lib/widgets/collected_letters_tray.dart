@@ -44,8 +44,8 @@ class CollectedLettersTray extends StatelessWidget {
                   width: 0.5,
                 ),
               ),
-              child: SizedBox(
-                height: 60,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(

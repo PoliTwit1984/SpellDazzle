@@ -15,7 +15,8 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
+  late AnimationController _animationController;
   final List<SpawnedLetter> _spawnedLetters = [];
   final List<String> _collectedLetters = [];
   final Random _random = Random();
@@ -39,13 +40,34 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     _initializeGrid();
     _startGame();
+    
+    // Initialize animation controller
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 16), // ~60 FPS
+    )..addListener(_updateLetterPositions);
+    _animationController.repeat();
   }
 
   @override
   void dispose() {
     _spawnTimer?.cancel();
     _gameTimer?.cancel();
+    _animationController.dispose();
     super.dispose();
+  }
+
+  void _updateLetterPositions() {
+    if (_spawnedLetters.isEmpty) return;
+    
+    setState(() {
+      final size = MediaQuery.of(context).size;
+      for (final letter in _spawnedLetters) {
+        // Create list of other letters for collision detection
+        final others = _spawnedLetters.where((l) => l != letter).toList();
+        letter.move(size, others);
+      }
+    });
   }
 
   void _initializeGrid() {
@@ -53,23 +75,29 @@ class _GameScreenState extends State<GameScreen> {
       final screenWidth = MediaQuery.of(context).size.width;
       final screenHeight = MediaQuery.of(context).size.height;
       final startX = (screenWidth - (GameConstants.gridColumns * (GameConstants.letterSize + GameConstants.gridSpacing))) / 2;
-      const startY = 120.0;
+      // Start after the header (which contains level, score, and timer)
+      const startY = 140.0;
+      // Bottom panel height + safe area + padding
+      const bottomPanelSpace = 180.0;
 
       for (int row = 0; row < GameConstants.gridRows; row++) {
         for (int col = 0; col < GameConstants.gridColumns; col++) {
           final x = startX + col * (GameConstants.letterSize + GameConstants.gridSpacing);
           final y = startY + row * (GameConstants.letterSize + GameConstants.gridSpacing);
-          if (y + GameConstants.letterSize < screenHeight - 200) {
+          // Only add positions that are within the playable area
+          if (y + GameConstants.letterSize < screenHeight - bottomPanelSpace) {
             _gridPositions.add(Offset(x, y));
             _gridOccupied.add(false);
           }
         }
       }
+      
+      // Start spawning letters after grid is initialized
+      _startSpawning();
     });
   }
 
   void _startGame() {
-    _startSpawning();
     _startGameTimer();
   }
 
@@ -97,6 +125,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _startSpawning() {
+    // Start periodic spawning
     _spawnTimer?.cancel();
     _spawnTimer = Timer.periodic(
       const Duration(milliseconds: GameConstants.spawnIntervalMs),
@@ -114,20 +143,21 @@ class _GameScreenState extends State<GameScreen> {
       final gridIndex = _gridPositions.indexOf(position);
       final letter = _getRandomWeightedLetter();
       
+      final spawnedLetter = SpawnedLetter(
+        letter: letter,
+        position: position,
+      );
+      
       setState(() {
-        _spawnedLetters.add(
-          SpawnedLetter(
-            letter: letter,
-            position: position,
-          ),
-        );
-        _gridOccupied[gridIndex] = true;
+        _spawnedLetters.add(spawnedLetter);
+        _gridOccupied[gridIndex] = false; // Don't block the position
+      });
 
-        Future.delayed(const Duration(seconds: GameConstants.letterLifetimeSeconds), () {
-          setState(() {
-            _spawnedLetters.removeWhere((l) => l.position == position);
-            _gridOccupied[gridIndex] = false;
-          });
+      // Remove letter after lifetime
+      Future.delayed(const Duration(seconds: GameConstants.letterLifetimeSeconds), () {
+        if (!mounted) return;
+        setState(() {
+          _spawnedLetters.remove(spawnedLetter);
         });
       });
     }
@@ -295,76 +325,84 @@ class _GameScreenState extends State<GameScreen> {
                 ),
               ),
             ),
-            SafeArea(
-            child: Column(
+            Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                SafeArea(
+                  child: Column(
                     children: [
-                      Text(
-                        'Level $_level',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Level $_level',
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Container(
+                              key: _scoreKey,
+                              child: Text(
+                                'Score: $_score',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isTimeLow ? Colors.red.withOpacity(0.3) : Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '$_timeLeft',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: isTimeLow ? Colors.red : Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Container(
-                        key: _scoreKey,
-                        child: Text(
-                          'Score: $_score',
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isTimeLow ? Colors.red.withOpacity(0.3) : Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '$_timeLeft',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: isTimeLow ? Colors.red : Colors.white,
-                          ),
-                        ),
+                      const Spacer(),
+                      BottomPanel(
+                        letters: _collectedLetters,
+                        onClear: _onClearLetters,
+                        onReorder: _onReorderLetters,
+                        onLetterRemoved: _onLetterRemoved,
+                        onSubmit: _onSubmitWord,
                       ),
                     ],
                   ),
                 ),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      for (final letter in _spawnedLetters)
-                        LetterTile(
-                          key: ValueKey(letter),
-                          letter: letter,
-                          onTap: () => _onLetterTapped(letter),
-                        ),
-                    ],
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 70.0, bottom: 100.0),
+                    child: Stack(
+                      children: [
+                        for (final letter in _spawnedLetters)
+                          LetterTile(
+                            key: ValueKey(letter),
+                            letter: letter,
+                            onTap: () => _onLetterTapped(letter),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
-                BottomPanel(
-                  letters: _collectedLetters,
-                  onClear: _onClearLetters,
-                  onReorder: _onReorderLetters,
-                  onLetterRemoved: _onLetterRemoved,
-                  onSubmit: _onSubmitWord,
                 ),
               ],
             ),
-          ),
           ],
         ),
       ),
