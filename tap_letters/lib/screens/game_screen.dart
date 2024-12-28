@@ -53,7 +53,7 @@ class _GameScreenState extends State<GameScreen> {
       final screenWidth = MediaQuery.of(context).size.width;
       final screenHeight = MediaQuery.of(context).size.height;
       final startX = (screenWidth - (GameConstants.gridColumns * (GameConstants.letterSize + GameConstants.gridSpacing))) / 2;
-      final startY = 120.0;
+      const startY = 120.0;
 
       for (int row = 0; row < GameConstants.gridRows; row++) {
         for (int col = 0; col < GameConstants.gridColumns; col++) {
@@ -99,7 +99,7 @@ class _GameScreenState extends State<GameScreen> {
   void _startSpawning() {
     _spawnTimer?.cancel();
     _spawnTimer = Timer.periodic(
-      Duration(milliseconds: GameConstants.spawnIntervalMs),
+      const Duration(milliseconds: GameConstants.spawnIntervalMs),
       (timer) {
         if (_spawnedLetters.length < GameConstants.maxSpawnedLetters) {
           _spawnLetter();
@@ -123,7 +123,7 @@ class _GameScreenState extends State<GameScreen> {
         );
         _gridOccupied[gridIndex] = true;
 
-        Future.delayed(Duration(seconds: GameConstants.letterLifetimeSeconds), () {
+        Future.delayed(const Duration(seconds: GameConstants.letterLifetimeSeconds), () {
           setState(() {
             _spawnedLetters.removeWhere((l) => l.position == position);
             _gridOccupied[gridIndex] = false;
@@ -269,6 +269,18 @@ class _GameScreenState extends State<GameScreen> {
 
     return Scaffold(
       body: RewardAnimations(
+        scoreKey: _scoreKey,
+        showConfetti: _showScoreAnimation,
+        scoreStartPosition: _lastWordPosition,
+        points: _lastPoints,
+        multiplier: _lastMultiplier,
+        onAnimationComplete: () {
+          if (mounted) {
+            setState(() {
+              _showScoreAnimation = false;
+            });
+          }
+        },
         child: Stack(
           children: [
             Container(
@@ -355,18 +367,6 @@ class _GameScreenState extends State<GameScreen> {
           ),
           ],
         ),
-        scoreKey: _scoreKey,
-        showConfetti: _showScoreAnimation,
-        scoreStartPosition: _lastWordPosition,
-        points: _lastPoints,
-        multiplier: _lastMultiplier,
-        onAnimationComplete: () {
-          if (mounted) {
-            setState(() {
-              _showScoreAnimation = false;
-            });
-          }
-        },
       ),
     );
   }
