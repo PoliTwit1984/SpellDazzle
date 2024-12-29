@@ -139,7 +139,7 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
                 borderRadius: BorderRadius.circular(16.0),
                 border: Border.all(
                   color: const Color(0x4DFFFFFF), // Fixed 0.3 opacity white
-                  width: 1 + (intensity * 1),
+                  width: 1.0 + (intensity * 1.0).clamp(0.0, 1.0),
                 ),
                 boxShadow: [
                   BoxShadow(

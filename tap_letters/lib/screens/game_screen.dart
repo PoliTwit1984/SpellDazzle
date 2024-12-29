@@ -170,6 +170,51 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
+  void _showPointsAnimation(String word, int points, String breakdown) {
+    late final OverlayEntry overlay;
+    overlay = OverlayEntry(
+      builder: (context) => Positioned(
+        left: 0,
+        right: 0,
+        bottom: LayoutConstants.bottomPanelHeight + 20,
+        child: Center(
+          child: PointsPopAnimation(
+            word: word,
+            points: points,
+            breakdown: breakdown,
+            onComplete: () {
+              overlay.remove();
+              _showConfettiAnimation();
+            },
+          ),
+        ),
+      ),
+    );
+    
+    Overlay.of(context).insert(overlay);
+  }
+
+  void _showConfettiAnimation() {
+    final RenderBox? box = _scoreKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box != null) {
+      final position = box.localToGlobal(
+        Offset(box.size.width / 2, box.size.height / 2)
+      );
+      setState(() {
+        _lastWordPosition = position;
+        _showScoreAnimation = true;
+      });
+      
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          setState(() {
+            _showScoreAnimation = false;
+          });
+        }
+      });
+    }
+  }
+
   Future<void> _onSubmitWord() async {
     if (_isSubmitting) return;
     if (_gameState.collectedLetters.value.isEmpty) {
@@ -189,54 +234,11 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       final word = _gameState.collectedLetters.value.join().toUpperCase();
       final success = await _gameManager.submitWord();
       if (success) {
-        final word = _gameState.collectedLetters.value.join().toUpperCase();
         final breakdown = ScoringEngine.getScoreBreakdown(
           word,
           bonusLetters: _gameState.bonusLetters.value,
         );
-        
-        // Show points pop animation
-        late final OverlayEntry overlay;
-        overlay = OverlayEntry(
-          builder: (context) => Positioned(
-            left: 0,
-            right: 0,
-            bottom: LayoutConstants.bottomPanelHeight + 20,
-            child: Center(
-              child: PointsPopAnimation(
-                word: word,
-                points: _lastPoints,
-                breakdown: breakdown,
-                onComplete: () {
-                  overlay.remove();
-                  
-                  // Show confetti after points animation
-                  final RenderBox? box = _scoreKey.currentContext?.findRenderObject() as RenderBox?;
-                  if (box != null) {
-                    final position = box.localToGlobal(
-                      Offset(box.size.width / 2, box.size.height / 2)
-                    );
-                    setState(() {
-                      _lastWordPosition = position;
-                      _showScoreAnimation = true;
-                    });
-                    
-                    // Hide confetti after animation
-                    Future.delayed(const Duration(milliseconds: 1200), () {
-                      if (mounted) {
-                        setState(() {
-                          _showScoreAnimation = false;
-                        });
-                      }
-                    });
-                  }
-                },
-              ),
-            ),
-          ),
-        );
-        
-        Overlay.of(context).insert(overlay);
+        _showPointsAnimation(word, _lastPoints, breakdown);
       } else {
         _showError('Invalid word');
       }
@@ -307,115 +309,115 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             gradient: ThemeConstants.backgroundGradient,
           ),
           child: SafeArea(
-        child: RewardAnimations(
-          scoreKey: _scoreKey,
-          showConfetti: _showScoreAnimation,
-          scoreStartPosition: _lastWordPosition,
-          points: _lastPoints,
-          multiplier: _lastMultiplier,
-          onAnimationComplete: () {
-            if (mounted) {
-              setState(() {
-                _showScoreAnimation = false;
-              });
-            }
-          },
-          child: Stack(
-            children: [
-              // Background waves
-              Positioned.fill(
-                child: ValueListenableBuilder<int>(
-                  valueListenable: _gameState.level,
-                  builder: (context, level, _) {
-                    return WaveBackground(
-                      key: ValueKey('wave_background_$level'),
-                      roundNumber: level,
-                    );
-                  },
-                ),
-              ),
-              // Game layout
-              Column(
+            child: RewardAnimations(
+              scoreKey: _scoreKey,
+              showConfetti: _showScoreAnimation,
+              scoreStartPosition: _lastWordPosition,
+              points: _lastPoints,
+              multiplier: _lastMultiplier,
+              onAnimationComplete: () {
+                if (mounted) {
+                  setState(() {
+                    _showScoreAnimation = false;
+                  });
+                }
+              },
+              child: Stack(
                 children: [
-                  // Header
-                  ValueListenableBuilder<int>(
-                    valueListenable: _gameState.score,
-                    builder: (context, score, _) {
-                      return ValueListenableBuilder<int>(
-                        valueListenable: _gameState.level,
-                        builder: (context, level, _) {
+                  // Background waves
+                  Positioned.fill(
+                    child: ValueListenableBuilder<int>(
+                      valueListenable: _gameState.level,
+                      builder: (context, level, _) {
+                        return WaveBackground(
+                          key: ValueKey('wave_background_$level'),
+                          roundNumber: level,
+                        );
+                      },
+                    ),
+                  ),
+                  // Game layout
+                  Column(
+                    children: [
+                      // Header
+                      ValueListenableBuilder<int>(
+                        valueListenable: _gameState.score,
+                        builder: (context, score, _) {
                           return ValueListenableBuilder<int>(
-                            valueListenable: _gameState.timeLeft,
-                            builder: (context, timeLeft, _) {
-                              return GameHeader(
-                                level: level,
-                                score: score,
-                                timeLeft: timeLeft,
-                                scoreKey: _scoreKey,
+                            valueListenable: _gameState.level,
+                            builder: (context, level, _) {
+                              return ValueListenableBuilder<int>(
+                                valueListenable: _gameState.timeLeft,
+                                builder: (context, timeLeft, _) {
+                                  return GameHeader(
+                                    level: level,
+                                    score: score,
+                                    timeLeft: timeLeft,
+                                    scoreKey: _scoreKey,
+                                  );
+                                },
                               );
                             },
                           );
                         },
-                      );
-                    },
-                  ),
-                  // Game area with letters
-                  Expanded(
-                    child: GameArea(
-                      letters: _letters,
-                      onLetterTapped: _handleLetterTap,
-                    ),
-                  ),
-                  // Bottom panel
-                  ValueListenableBuilder<List<String>>(
-                    valueListenable: _gameState.collectedLetters,
-                    builder: (context, letters, _) {
-                      return ValueListenableBuilder<List<bool>>(
-                        valueListenable: _gameState.bonusLetters,
-                        builder: (context, bonuses, _) {
-                          return BottomPanel(
-                            letters: letters,
-                            bonusLetters: bonuses,
-                            onClear: _gameState.clearCollectedLetters,
-                            onReorder: _gameState.reorderCollectedLetters,
-                            onLetterRemoved: _gameState.removeCollectedLetter,
-                            onSubmit: _onSubmitWord,
+                      ),
+                      // Game area with letters
+                      Expanded(
+                        child: GameArea(
+                          letters: _letters,
+                          onLetterTapped: _handleLetterTap,
+                        ),
+                      ),
+                      // Bottom panel
+                      ValueListenableBuilder<List<String>>(
+                        valueListenable: _gameState.collectedLetters,
+                        builder: (context, letters, _) {
+                          return ValueListenableBuilder<List<bool>>(
+                            valueListenable: _gameState.bonusLetters,
+                            builder: (context, bonuses, _) {
+                              return BottomPanel(
+                                letters: letters,
+                                bonusLetters: bonuses,
+                                onClear: _gameState.clearCollectedLetters,
+                                onReorder: _gameState.reorderCollectedLetters,
+                                onLetterRemoved: _gameState.removeCollectedLetter,
+                                onSubmit: _onSubmitWord,
+                              );
+                            },
                           );
                         },
-                      );
-                    },
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              // Game over overlay
-              if (_isGameOver)
-                ValueListenableBuilder<int>(
-                  valueListenable: _gameState.score,
-                  builder: (context, score, _) {
-                    return ValueListenableBuilder<int>(
-                      valueListenable: _gameState.level,
-                      builder: (context, level, _) {
-                        return GameOverOverlay(
-                          finalScore: score,
-                          level: level,
-                          onRestart: _restartGame,
+                  // Game over overlay
+                  if (_isGameOver)
+                    ValueListenableBuilder<int>(
+                      valueListenable: _gameState.score,
+                      builder: (context, score, _) {
+                        return ValueListenableBuilder<int>(
+                          valueListenable: _gameState.level,
+                          builder: (context, level, _) {
+                            return GameOverOverlay(
+                              finalScore: score,
+                              level: level,
+                              onRestart: _restartGame,
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
-              // Round summary overlay
-              if (_showRoundSummary)
-                RoundSummaryOverlay(
-                  roundScore: _roundScore,
-                  bestWord: _bestWord,
-                  bestWordScore: _bestWordScore,
-                  nextLevel: _nextLevel,
-                  onContinue: _continueToNextRound,
-                ),
-            ],
-          ),
-        ),
+                    ),
+                  // Round summary overlay
+                  if (_showRoundSummary)
+                    RoundSummaryOverlay(
+                      roundScore: _roundScore,
+                      bestWord: _bestWord,
+                      bestWordScore: _bestWordScore,
+                      nextLevel: _nextLevel,
+                      onContinue: _continueToNextRound,
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

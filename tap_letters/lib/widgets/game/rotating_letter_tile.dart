@@ -85,12 +85,18 @@ class _RotatingLetterTileState extends State<RotatingLetterTile> with SingleTick
                   width: 1,
                 ),
                 boxShadow: [
-                  if (widget.letter.isBonus)
-                    const BoxShadow(
-                      color: Color(0xFFFF0000),
-                      blurRadius: 12,
+                  if (widget.letter.isBonus) ...[
+                    BoxShadow(
+                      color: const Color(0xFFFF0000).withOpacity(0.5),
+                      blurRadius: 16,
                       spreadRadius: 4,
                     ),
+                    BoxShadow(
+                      color: const Color(0xFFFF0000).withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    ),
+                  ],
                   BoxShadow(
                     color: widget.letter.baseColor.withOpacity(widget.letter.shadowIntensity * 0.5),
                     blurRadius: 8 + (widget.letter.shadowIntensity * 8),
@@ -121,6 +127,12 @@ class _RotatingLetterTileState extends State<RotatingLetterTile> with SingleTick
                         blurRadius: 8,
                         offset: const Offset(0, 0),
                       ),
+                      if (widget.letter.isBonus)
+                        const Shadow(
+                          color: Color(0xFFFF0000),
+                          blurRadius: 12,
+                          offset: Offset(0, 0),
+                        ),
                     ],
                   ),
                 ),

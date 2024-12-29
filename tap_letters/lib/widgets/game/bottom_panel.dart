@@ -128,12 +128,18 @@ class _BottomPanelState extends State<BottomPanel> {
                                 color: ThemeConstants.primaryColor,
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
-                                  if (i < widget.bonusLetters.length && widget.bonusLetters[i])
-                                    const BoxShadow(
-                                      color: Color(0xFFFF0000),
-                                      blurRadius: 12,
+                                  if (i < widget.bonusLetters.length && widget.bonusLetters[i]) ...[
+                                    BoxShadow(
+                                      color: const Color(0xFFFF0000).withOpacity(0.5),
+                                      blurRadius: 16,
                                       spreadRadius: 4,
                                     ),
+                                    BoxShadow(
+                                      color: const Color(0xFFFF0000).withOpacity(0.3),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.15),
                                     blurRadius: 3,
@@ -148,6 +154,19 @@ class _BottomPanelState extends State<BottomPanel> {
                                     fontSize: LayoutConstants.trayLetterTextSize,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                      if (i < widget.bonusLetters.length && widget.bonusLetters[i])
+                                        const Shadow(
+                                          color: Color(0xFFFF0000),
+                                          blurRadius: 12,
+                                          offset: Offset(0, 0),
+                                        ),
+                                    ],
                                   ),
                                 ),
                               ),
