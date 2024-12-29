@@ -1,44 +1,95 @@
-# Tap Letters Game
+# SpellDazzle - Word Formation Game
 
-A fast-paced word formation game built with Flutter where players collect letters to form valid English words before time runs out.
+A modern, arcade-style word game built with Flutter where players collect falling letters to form words.
 
-## Game Features
+## Overview
 
-- Grid-based letter spawning system
-- Smooth animations with fade-in and pop effects
-- 30-second timer per round
-- Score multipliers for longer words
-- Speed bonuses for quick word formation
-- Comprehensive English dictionary validation
-- Drag and drop letter rearrangement
-- Double-tap to remove letters
-- iOS-style frosted glass UI elements
+SpellDazzle challenges players to create words from floating letters in a visually engaging environment. The game features smooth animations, progressive difficulty, and a scoring system that rewards longer and more complex words.
 
-## Getting Started
+## Technical Architecture
 
-1. Clone the repository
-2. Ensure Flutter is installed and set up
-3. Run `flutter pub get` to install dependencies
-4. Run `flutter run` to start the game
+### Core Components
 
-## How to Play
+- **GameManager**: Central controller handling game state, letter spawning, and round transitions
+- **GameState**: Observable state management using ValueNotifier
+- **AnimatedLetter**: Custom widget for letter movement and animations
+- **DictionaryService**: Word validation using a pre-loaded dictionary
+- **ScoringEngine**: Point calculation based on word length and letter values
 
-1. Tap letters as they appear on screen to collect them
-2. Form words using 3-7 letters
-3. Submit valid words to score points and reset the timer
-4. Get bonus points for:
-   - 4-letter words (1.5x multiplier)
-   - 5+ letter words (2.0x multiplier)
-   - Quick word formation (up to 2x bonus)
-5. Game ends if:
-   - Timer reaches zero
-   - Invalid word is submitted
+### Key Features
 
-## Technical Details
+1. **Letter System**
+   - Dynamic letter spawning with weighted distribution
+   - Smooth floating animations with collision detection
+   - Responsive touch controls for letter collection
 
-- Built with Flutter
-- Uses custom animations and transitions
-- Implements efficient word validation
-- Grid-based layout system
-- State management for game progression
-- Responsive design for various screen sizes
+2. **Game Mechanics**
+   - Round-based gameplay with increasing difficulty
+   - Minimum 3-letter word requirement
+   - Scrabble-style letter point values
+   - Word length multipliers for scoring
+
+3. **UI/UX**
+   - Minimalist design with subtle wave background
+   - Frosted glass effects for UI elements
+   - Responsive layout supporting various screen sizes
+   - Smooth transitions and reward animations
+
+## Setup & Development
+
+1. **Prerequisites**
+   ```bash
+   flutter --version  # Ensure Flutter is installed
+   ```
+
+2. **Installation**
+   ```bash
+   git clone <repository-url>
+   cd tap_letters
+   flutter pub get
+   ```
+
+3. **Running**
+   ```bash
+   flutter run
+   ```
+
+### Project Structure
+
+```
+lib/
+├── constants/        # Game configuration and theme constants
+├── models/          # Data models and state management
+├── screens/         # Main game screens
+├── services/        # Dictionary and scoring services
+├── widgets/         # UI components
+│   ├── animations/  # Custom animation widgets
+│   ├── game/       # Core game UI elements
+│   └── overlays/   # Overlay screens (game over, round summary)
+└── managers/        # Game logic and state management
+```
+
+## Performance Considerations
+
+- Letter animations use custom painters for optimal performance
+- Dictionary loaded asynchronously at startup
+- Efficient collision detection using spatial partitioning
+- Memory management through proper widget disposal
+
+## Testing
+
+```bash
+flutter test         # Run unit tests
+flutter test --coverage  # Generate coverage report
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

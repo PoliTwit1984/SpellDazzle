@@ -1,36 +1,41 @@
 class GameConstants {
-  // Letter spawning
-  static const int maxSpawnedLetters = 12;
-  static const int maxCollectedLetters = 7;
-  static const int spawnIntervalMs = 1000;
-  static const int letterLifetimeSeconds = 6;
-  
-  // Grid layout
-  static const int gridColumns = 4;
-  static const int gridRows = 6;
-  static const double letterSize = 60.0;
-  static const double gridSpacing = 20.0;
-  
   // Game rules
   static const int minWordLength = 3;
-  static const int maxWordLength = 7;
+  static const int maxCollectedLetters = 8;
   static const int roundTimeSeconds = 30;
-  static const int lowTimeThreshold = 5;
-  static const double speedBonusTimeWindow = 5.0;
   
-  // Scoring
-  static const double fourLetterBonus = 1.5;
-  static const double fiveLetterBonus = 2.0;
-  static const double speedBonusMax = 2.0;
+  // Letter spawning
+  static const int minSpawnedLetters = 4;
+  static const int maxSpawnedLetters = 8;
+  static const int spawnIntervalMs = 2000;
+  static const double letterSize = 60.0;
   
-  // Letter distribution
+  // Letter movement
+  static const double minLetterSpeed = 0.5; // Pixels per frame
+  static const double maxLetterSpeed = 1.5; // Pixels per frame
+  static const int minLetterLifetimeSeconds = 10;
+  static const int maxLetterLifetimeSeconds = 20;
+  
+  // Letter pool with weights (Scrabble-like distribution)
   static const Map<String, int> letterPool = {
-    'E': 12, 'A': 9, 'I': 9, 'O': 8, 'N': 6, 'R': 6, 'T': 6,
-    'L': 4, 'S': 4, 'U': 4, 'D': 4, 'G': 3,
-    'B': 2, 'C': 2, 'M': 2, 'P': 2, 'F': 2, 'H': 2, 'V': 2, 'W': 2, 'Y': 2,
-    'K': 1, 'J': 1, 'X': 1, 'Q': 1, 'Z': 1
+    'E': 12, 'A': 9, 'I': 9, 'O': 8, 'N': 6, 'R': 6, 'T': 6, 'L': 4, 'S': 4, 'U': 4,
+    'D': 4, 'G': 3, 'B': 2, 'C': 2, 'M': 2, 'P': 2, 'F': 2, 'H': 2, 'V': 2, 'W': 2,
+    'Y': 2, 'K': 1, 'J': 1, 'X': 1, 'Q': 1, 'Z': 1,
   };
-
-  // Dictionary
-  static const List<String> additionalWords = [];
+  
+  // Letter point values (Scrabble-like scoring)
+  static const Map<String, int> letterValues = {
+    'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1, 'J': 8,
+    'K': 5, 'L': 1, 'M': 3, 'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1,
+    'U': 1, 'V': 4, 'W': 4, 'X': 8, 'Y': 4, 'Z': 10,
+  };
+  
+  // Word length multipliers
+  static const Map<int, double> lengthMultipliers = {
+    3: 1.0, // 3 letters = no multiplier
+    4: 1.2, // 4 letters = 1.2x points
+    5: 1.3, // 5 letters = 1.3x points
+    6: 1.5, // 6 letters = 1.5x points
+    7: 1.7, // 7+ letters = 1.7x points
+  };
 }

@@ -1,101 +1,137 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../constants/game_constants.dart';
 
 class SpawnedLetter {
   final String letter;
   Offset position;
   final DateTime spawnTime;
+  final double lifetimeSeconds;
   Offset velocity;
   
   // Movement constants
-  static const double minSpeed = 0.3;
-  static const double maxSpeed = 0.8;
-  static const double bounceVelocityLoss = 0.95; // Reduce velocity by 5% on bounce
-
+  static const double bounceEnergy = 0.95; // Higher energy retention for smoother movement
+  static const double letterSize = 60.0;
+  static const double collisionRadius = 55.0;
+  static const double directionChangeChance = 0.01; // 1% chance to change direction each frame
+  
+  // Keep track of last used lifetime to stagger spawns
+  static double _lastLifetime = GameConstants.minLetterLifetimeSeconds.toDouble();
+  
   SpawnedLetter({
     required this.letter,
     required this.position,
     DateTime? spawnTime,
     Offset? velocity,
+    double? lifetimeSeconds,
   }) : 
     spawnTime = spawnTime ?? DateTime.now(),
-    velocity = velocity ?? _generateRandomVelocity();
+    velocity = velocity ?? _generateRandomVelocity(),
+    lifetimeSeconds = lifetimeSeconds ?? _getNextLifetime();
 
   static Offset _generateRandomVelocity() {
     final random = Random();
-    // Generate random angle between 0 and 2π
+    // Generate random angle between 0 and 2π (full circle)
     final angle = random.nextDouble() * 2 * pi;
-    // Generate random speed between min and max speed
-    final speed = minSpeed + random.nextDouble() * (maxSpeed - minSpeed);
-    // Convert polar coordinates to cartesian
-    return Offset(
-      cos(angle) * speed,
-      sin(angle) * speed,
-    );
+    // Generate random speed between min and max
+    final speedRange = GameConstants.maxLetterSpeed - GameConstants.minLetterSpeed;
+    final speed = GameConstants.minLetterSpeed + random.nextDouble() * speedRange;
+    // Convert to x,y velocity
+    return Offset(cos(angle) * speed, sin(angle) * speed);
+  }
+
+  static double _getNextLifetime() {
+    // Increment lifetime by 0.2 seconds
+    _lastLifetime += 0.2;
+    // Reset if we've reached max
+    if (_lastLifetime > GameConstants.maxLetterLifetimeSeconds) {
+      _lastLifetime = GameConstants.minLetterLifetimeSeconds.toDouble();
+    }
+    return _lastLifetime;
+  }
+
+  bool get isExpired {
+    final now = DateTime.now();
+    return now.difference(spawnTime).inMilliseconds >= (lifetimeSeconds * 1000);
   }
 
   void move(Size bounds, List<SpawnedLetter> others) {
-    final nextPosition = position + velocity;
-    bool hasCollision = false;
+    // Randomly change direction occasionally
+    if (Random().nextDouble() < directionChangeChance) {
+      final angle = Random().nextDouble() * 2 * pi;
+      final currentSpeed = sqrt(velocity.dx * velocity.dx + velocity.dy * velocity.dy);
+      velocity = Offset(
+        cos(angle) * currentSpeed,
+        sin(angle) * currentSpeed
+      );
+    }
     
-    // Check collisions with other letters
+    // Calculate boundaries and next position
+    final maxX = bounds.width - letterSize;
+    final maxY = bounds.height - letterSize;
+    var nextPosition = position + velocity;
+    
+    // Handle boundary collisions
+    if (nextPosition.dx <= 0 || nextPosition.dx >= maxX) {
+      velocity = Offset(-velocity.dx * bounceEnergy, velocity.dy);
+      nextPosition = Offset(
+        nextPosition.dx <= 0 ? 0 : maxX,
+        nextPosition.dy
+      );
+    }
+    
+    if (nextPosition.dy <= 0 || nextPosition.dy >= maxY) {
+      velocity = Offset(velocity.dx, -velocity.dy * bounceEnergy);
+      nextPosition = Offset(
+        nextPosition.dx,
+        nextPosition.dy <= 0 ? 0 : maxY
+      );
+    }
+    
+    // Handle collisions with other letters
     for (final other in others) {
       if (other == this) continue;
       
-      // Calculate distance between centers
       final dx = nextPosition.dx - other.position.dx;
       final dy = nextPosition.dy - other.position.dy;
       final distance = sqrt(dx * dx + dy * dy);
       
-      // If letters would overlap (use slightly smaller collision radius for smoother interaction)
-      if (distance < 55.0) {
-        hasCollision = true;
+      if (distance < collisionRadius) {
         // Calculate collision normal
         final nx = dx / distance;
         final ny = dy / distance;
         
-        // Reflect velocity off collision normal
-        final dotProduct = velocity.dx * nx + velocity.dy * ny;
-        velocity = Offset(
-          velocity.dx - 2 * dotProduct * nx,
-          velocity.dy - 2 * dotProduct * ny
-        ) * bounceVelocityLoss;
+        // Calculate relative velocity
+        final relativeVelocity = velocity - other.velocity;
+        final normalVelocity = relativeVelocity.dx * nx + relativeVelocity.dy * ny;
         
-        // Move away from collision with a small separation
-        final separation = 55.0 - distance;
-        position = Offset(
-          position.dx + nx * separation * 0.5,
-          position.dy + ny * separation * 0.5
-        );
-        break;
+        // Only resolve collision if objects are moving toward each other
+        if (normalVelocity < 0) {
+          // Calculate impulse
+          final restitution = bounceEnergy;
+          final impulse = -(1 + restitution) * normalVelocity / 2;
+          
+          // Apply impulse
+          velocity = Offset(
+            velocity.dx + impulse * nx,
+            velocity.dy + impulse * ny
+          );
+          
+          // Move away from collision
+          final separation = collisionRadius - distance;
+          nextPosition = Offset(
+            nextPosition.dx + nx * separation * 0.5,
+            nextPosition.dy + ny * separation * 0.5
+          );
+        }
       }
     }
     
-    // If no collision, update position
-    if (!hasCollision) {
-      position = nextPosition;
-    }
-    
-    // Bounce off screen edges
-    const letterSize = 60.0;
-    const topPadding = 140.0;
-    const bottomPadding = 240.0;
-    
-    if (position.dx <= 0 || position.dx >= bounds.width - letterSize) {
-      velocity = Offset(-velocity.dx * bounceVelocityLoss, velocity.dy);
-      position = Offset(
-        position.dx <= 0 ? 0 : bounds.width - letterSize,
-        position.dy
-      );
-    }
-    
-    if (position.dy <= topPadding || position.dy >= bounds.height - bottomPadding) {
-      velocity = Offset(velocity.dx, -velocity.dy * bounceVelocityLoss);
-      position = Offset(
-        position.dx,
-        position.dy <= topPadding ? topPadding : bounds.height - bottomPadding
-      );
-    }
+    // Ensure position stays within bounds
+    position = Offset(
+      nextPosition.dx.clamp(0, maxX),
+      nextPosition.dy.clamp(0, maxY)
+    );
   }
 
   SpawnedLetter copyWith({
@@ -103,12 +139,19 @@ class SpawnedLetter {
     Offset? position,
     DateTime? spawnTime,
     Offset? velocity,
+    double? lifetimeSeconds,
   }) {
     return SpawnedLetter(
       letter: letter ?? this.letter,
       position: position ?? this.position,
       spawnTime: spawnTime ?? this.spawnTime,
       velocity: velocity ?? this.velocity,
+      lifetimeSeconds: lifetimeSeconds ?? this.lifetimeSeconds,
     );
+  }
+
+  // Reset stagger counter when game restarts
+  static void resetLifetimeStagger() {
+    _lastLifetime = GameConstants.minLetterLifetimeSeconds.toDouble();
   }
 }

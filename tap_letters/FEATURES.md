@@ -1,75 +1,133 @@
-# Tap Letters Game Features
+# SpellDazzle Features Documentation
 
-## Core Gameplay
+## Core Game Mechanics
 
-### Letter Collection ✅
-- Letters randomly spawn on screen at 500ms intervals
-- Up to 8 letters can be on screen simultaneously
-- Letters disappear after 3 seconds if not collected
-- Maximum of 7 letters can be collected at once
-- Letters spawn in a grid-based layout for organized appearance
+### Letter System
+- **Spawning Algorithm**
+  - Letters spawn with weighted distribution based on English language frequency
+  - Maintains 4-8 letters on screen at any time
+  - Automatic respawning when letters are collected
+  - Smart positioning to prevent overlaps
 
-### Word Formation ✅
-- Players can form words using 3-7 letters
-- Letters can be rearranged by dragging and dropping
-- Double-tap a letter to throw it back into play
-- Letters thrown back appear in the bottom half of the screen
-- Clear button to remove all collected letters
+- **Letter Movement**
+  - Smooth floating animation with subtle acceleration
+  - Collision detection between letters
+  - Boundary detection to keep letters in play area
+  - Despawn animation when collected
 
-### Word Validation ✅
-- Words are checked against two dictionaries:
-  1. A comprehensive English dictionary (words_alpha.txt)
-  2. A custom dictionary of common words
-- Supports words from 3 to 7 letters in length
-- Invalid words end the game
+### Word Formation
+- **Collection Mechanics**
+  - Tap letters to collect them
+  - Letters appear in collection tray at bottom
+  - Maximum 7 letters can be collected
+  - Letters can be reordered in tray
+  - Individual letters can be removed by tapping
 
-### Scoring System ✅
-- Base points equal to word length
-- Bonus multipliers:
-  - 1.5x for 4-letter words
-  - 2.0x for 5+ letter words
-- Speed bonus up to 2x for quick word formation
-- Points are displayed after each valid word
+- **Word Validation**
+  - Minimum 3-letter requirement
+  - Dictionary validation using pre-loaded word list
+  - Invalid words end the game
+  - Instant feedback on word submission
 
-## Game Flow
+### Scoring System
+- **Letter Points**
+  - Common letters (E, A, I, O, N, R, T): 1 point
+  - Less common letters (D, G, B, C, M, P): 2-3 points
+  - Rare letters (K, J, X, Q, Z): 4-10 points
 
-### Timer System ✅
-- 30-second timer per level
-- Timer resets after each valid word
-- Timer turns red when 5 seconds remain
-- Game ends when timer reaches zero
+- **Word Multipliers**
+  - 3 letters: 1.0x (base score)
+  - 4 letters: 1.2x multiplier
+  - 5 letters: 1.3x multiplier
+  - 6 letters: 1.5x multiplier
+  - 7+ letters: 1.7x multiplier
 
-### Level Progression ✅
-- Each valid word advances to the next level
-- Level counter displayed in app bar
-- Difficulty remains consistent across levels
+## Visual Elements
 
-### User Interface ✅
-- Clean, minimal design with blue color scheme
-- Top bar displays:
-  - Current level
-  - Score
-  - Timer with color feedback
-- Bottom panel includes:
-  - Letter collection tray
-  - Word submission button
-  - Clear letters button
+### Background Design
+- **Wave Animation**
+  - Two translucent blue waves (12% and 8% opacity)
+  - Smooth horizontal movement (13-15 second cycles)
+  - Positioned at 35% and 75% screen height
+  - Minimal design for optimal readability
 
-### Letter Distribution ✅
-- Letter frequency based on English language usage
-- More common letters (E, A, R, I, O, T) appear more frequently
-- Balanced distribution to ensure playable words are possible
+### UI Components
+- **Letter Tiles**
+  - Clean, modern design
+  - Responsive touch targets
+  - Shadow effects for depth
+  - Clear typography
 
-## Animations ✅
-- Letter fade-in animation
-- Pop effect on letter spawn
-- Gentle bobbing motion
-- Smooth transitions
+- **Collection Tray**
+  - Frosted glass effect
+  - Dynamic size adjustment based on letter count
+  - Smooth reordering animation
+  - Clear visual feedback
 
-## Remaining Tasks
-- Implement game over overlay
-- Add high score tracking
-- Add help button for instructions
-- Add floating notifications for feedback
-- Add state persistence for high scores
-- Add debug logging for word validation
+### Animations
+- **Letter Animations**
+  - Smooth floating movement
+  - Soft collision responses
+  - Fade-out collection effect
+  - Scale animations for interactions
+
+- **Score Animations**
+  - Point accumulation effects
+  - Multiplier displays
+  - Achievement popups
+  - Round transition effects
+
+## Game Progression
+
+### Round System
+- **Round Structure**
+  - 30-second rounds
+  - Must submit at least one valid word
+  - Score summary between rounds
+  - Progressive difficulty increase
+
+- **Round Summary**
+  - Total round score
+  - Best word highlight
+  - Word score breakdown
+  - Next level preview
+
+### Difficulty Scaling
+- **Per-Round Adjustments**
+  - Increased letter movement speed
+  - More complex letter distribution
+  - Higher score requirements
+  - Shorter time between spawns
+
+## Technical Features
+
+### Performance Optimizations
+- **Animation Engine**
+  - Custom painter implementations
+  - Efficient collision detection
+  - Optimized render cycles
+  - Memory-conscious design
+
+### State Management
+- **Game State**
+  - Reactive state updates
+  - Efficient UI rebuilds
+  - Clean architecture pattern
+  - Modular component design
+
+### Error Handling
+- **Graceful Recovery**
+  - Dictionary load fallbacks
+  - Animation frame drops
+  - Touch event conflicts
+  - Memory pressure handling
+
+## Future Enhancements
+- Online leaderboards
+- Achievement system
+- Power-up mechanics
+- Theme customization
+- Sound effects and music
+- Social sharing features
+- Daily challenges
+- Practice mode

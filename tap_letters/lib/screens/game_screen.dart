@@ -1,12 +1,19 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
+import '../constants/layout_constants.dart';
 import '../constants/game_constants.dart';
-import '../models/spawned_letter.dart';
+import '../managers/game_manager.dart';
+import '../models/game_state.dart';
+import '../models/animated_letter.dart';
 import '../services/dictionary_service.dart';
+import '../services/scoring_engine.dart';
 import '../widgets/game/bottom_panel.dart';
-import '../widgets/game/letter_tile.dart';
+import '../widgets/game/game_area.dart';
+import '../widgets/game/game_header.dart';
+import '../widgets/game/wave_background.dart';
 import '../widgets/animations/reward_animations.dart';
+import '../widgets/overlays/game_over_overlay.dart';
+import '../widgets/overlays/round_summary_overlay.dart';
+import '../constants/theme_constants.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -16,394 +23,375 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  final List<SpawnedLetter> _spawnedLetters = [];
-  final List<String> _collectedLetters = [];
-  final Random _random = Random();
-  Timer? _spawnTimer;
-  Timer? _gameTimer;
-  int _score = 0;
-  int _timeLeft = GameConstants.roundTimeSeconds;
-  int _level = 1;
-  final DictionaryService _dictionaryService = DictionaryService();
-  final List<Offset> _gridPositions = [];
-  final List<bool> _gridOccupied = [];
-  DateTime? _lastWordTime;
+  late GameManager _gameManager;
+  late GameState _gameState;
+  final List<AnimatedLetter> _letters = [];
   final GlobalKey _scoreKey = GlobalKey();
   bool _showScoreAnimation = false;
+  bool _isGameOver = false;
+  bool _isLoading = true;
+  bool _isSubmitting = false;
+  bool _showRoundSummary = false;
   Offset? _lastWordPosition;
   int _lastPoints = 0;
   double _lastMultiplier = 1.0;
+  int _previousScore = 0;
+  
+  // Round summary data
+  int _roundScore = 0;
+  String _bestWord = '';
+  int _bestWordScore = 0;
+  int _nextLevel = 1;
 
   @override
   void initState() {
     super.initState();
-    _initializeGrid();
-    _startGame();
-    
-    // Initialize animation controller
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 16), // ~60 FPS
-    )..addListener(_updateLetterPositions);
-    _animationController.repeat();
+    _initializeServices();
   }
 
-  @override
-  void dispose() {
-    _spawnTimer?.cancel();
-    _gameTimer?.cancel();
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  void _updateLetterPositions() {
-    if (_spawnedLetters.isEmpty) return;
+  Future<void> _initializeServices() async {
+    // Initialize dictionary service
+    await DictionaryService().initialize();
     
     setState(() {
-      final size = MediaQuery.of(context).size;
-      for (final letter in _spawnedLetters) {
-        // Create list of other letters for collision detection
-        final others = _spawnedLetters.where((l) => l != letter).toList();
-        letter.move(size, others);
-      }
+      _isLoading = false;
+      _gameState = GameState();
     });
+    
+    _initializeGame();
   }
 
-  void _initializeGrid() {
+  void _initializeGame() {
+    _gameManager = GameManager(
+      gameState: _gameState,
+      onScoreChanged: (score) {
+        setState(() {
+          _lastPoints = score - _previousScore;
+          _previousScore = score;
+        });
+        _gameState.updateScore(score);
+      },
+      onLevelChanged: _gameState.updateLevel,
+      onTimeChanged: _gameState.updateTimeLeft,
+      onLetterSpawned: (letter, position) {
+        // Create animated letter with this widget as vsync provider
+        final animatedLetter = AnimatedLetter(
+          letter: letter,
+          initialPosition: position,
+          vsync: this,
+        );
+        setState(() {
+          _letters.add(animatedLetter);
+        });
+      },
+      onGameOver: () {
+        setState(() {
+          _isGameOver = true;
+        });
+      },
+      onRoundComplete: (roundScore, bestWord, bestWordScore, nextLevel) {
+        setState(() {
+          _roundScore = roundScore;
+          _bestWord = bestWord;
+          _bestWordScore = bestWordScore;
+          _nextLevel = nextLevel;
+          _showRoundSummary = true;
+        });
+      },
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
-      final startX = (screenWidth - (GameConstants.gridColumns * (GameConstants.letterSize + GameConstants.gridSpacing))) / 2;
-      // Start after the header (which contains level, score, and timer)
-      const startY = 140.0;
-      // Bottom panel height + safe area + padding
-      const bottomPanelSpace = 180.0;
-
-      for (int row = 0; row < GameConstants.gridRows; row++) {
-        for (int col = 0; col < GameConstants.gridColumns; col++) {
-          final x = startX + col * (GameConstants.letterSize + GameConstants.gridSpacing);
-          final y = startY + row * (GameConstants.letterSize + GameConstants.gridSpacing);
-          // Only add positions that are within the playable area
-          if (y + GameConstants.letterSize < screenHeight - bottomPanelSpace) {
-            _gridPositions.add(Offset(x, y));
-            _gridOccupied.add(false);
-          }
-        }
-      }
-      
-      // Start spawning letters after grid is initialized
-      _startSpawning();
+      final mediaQuery = MediaQuery.of(context);
+      final size = Size(
+        mediaQuery.size.width,
+        mediaQuery.size.height - mediaQuery.padding.top - mediaQuery.padding.bottom,
+      );
+      _gameManager.initializeGrid(
+        size,
+        LayoutConstants.headerHeight,
+        LayoutConstants.bottomPanelHeight,
+      );
+      _gameManager.startGame();
     });
   }
 
-  void _startGame() {
-    _startGameTimer();
+  void _restartGame() {
+    setState(() {
+      _isGameOver = false;
+      _previousScore = 0;
+      // Clear existing letters
+      for (final letter in _letters) {
+        letter.dispose();
+      }
+      _letters.clear();
+      // Reset game state
+      _gameState = GameState();
+      // Initialize new game
+      _initializeGame();
+    });
   }
 
-  void _startGameTimer() {
-    _gameTimer?.cancel();
-    _timeLeft = GameConstants.roundTimeSeconds;
-    _gameTimer = Timer.periodic(
-      const Duration(seconds: 1),
-      (timer) {
-        setState(() {
-          if (_timeLeft > 0) {
-            _timeLeft--;
-          } else {
-            _endGame();
-          }
-        });
-      },
+  void _continueToNextRound() {
+    setState(() {
+      _showRoundSummary = false;
+      // Clear existing letters
+      for (final letter in _letters) {
+        letter.dispose();
+      }
+      _letters.clear();
+    });
+    
+    // Start next round after a short delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _gameManager.startNextRound();
+      }
+    });
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: ThemeConstants.dangerColor,
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
-  void _endGame() {
-    _spawnTimer?.cancel();
-    _gameTimer?.cancel();
-    // TODO: Show game over overlay
-  }
-
-  void _startSpawning() {
-    // Start periodic spawning
-    _spawnTimer?.cancel();
-    _spawnTimer = Timer.periodic(
-      const Duration(milliseconds: GameConstants.spawnIntervalMs),
-      (timer) {
-        if (_spawnedLetters.length < GameConstants.maxSpawnedLetters) {
-          _spawnLetter();
-        }
-      },
+  void _showScoreBreakdown(String word, int points) {
+    final breakdown = ScoringEngine.getScoreBreakdown(word);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Word: $word',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(breakdown),
+          ],
+        ),
+        backgroundColor: ThemeConstants.accentColor,
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 
-  void _spawnLetter() {
-    final position = _getAvailableGridPosition();
-    if (position != null) {
-      final gridIndex = _gridPositions.indexOf(position);
-      final letter = _getRandomWeightedLetter();
-      
-      final spawnedLetter = SpawnedLetter(
-        letter: letter,
-        position: position,
-      );
-      
-      setState(() {
-        _spawnedLetters.add(spawnedLetter);
-        _gridOccupied[gridIndex] = false; // Don't block the position
-      });
-
-      // Remove letter after lifetime
-      Future.delayed(const Duration(seconds: GameConstants.letterLifetimeSeconds), () {
-        if (!mounted) return;
-        setState(() {
-          _spawnedLetters.remove(spawnedLetter);
-        });
-      });
+  Future<void> _onSubmitWord() async {
+    if (_isSubmitting) return;
+    if (_gameState.collectedLetters.value.isEmpty) {
+      _showError('No letters collected');
+      return;
     }
-  }
-
-  String _getRandomWeightedLetter() {
-    final List<String> weightedLetters = [];
-    GameConstants.letterPool.forEach((letter, weight) {
-      for (int i = 0; i < weight; i++) {
-        weightedLetters.add(letter);
-      }
-    });
-    return weightedLetters[_random.nextInt(weightedLetters.length)];
-  }
-
-  Offset? _getAvailableGridPosition() {
-    if (_gridPositions.isEmpty) return null;
-
-    final availableIndices = List<int>.generate(_gridOccupied.length, (i) => i)
-        .where((i) => !_gridOccupied[i])
-        .toList();
-
-    if (availableIndices.isEmpty) return null;
-
-    final randomIndex = availableIndices[_random.nextInt(availableIndices.length)];
-    return _gridPositions[randomIndex];
-  }
-
-  void _onLetterTapped(SpawnedLetter letter) {
-    if (_collectedLetters.length < GameConstants.maxCollectedLetters) {
-      final gridIndex = _gridPositions.indexOf(letter.position);
-      setState(() {
-        _spawnedLetters.remove(letter);
-        if (gridIndex != -1) {
-          _gridOccupied[gridIndex] = false;
-        }
-        _collectedLetters.add(letter.letter);
-      });
+    if (_gameState.collectedLetters.value.length < GameConstants.minWordLength) {
+      _showError('Word must be at least ${GameConstants.minWordLength} letters');
+      return;
     }
-  }
-
-  void _onClearLetters() {
+    
     setState(() {
-      _collectedLetters.clear();
+      _isSubmitting = true;
     });
-  }
-
-  void _onReorderLetters(int oldIndex, int newIndex) {
-    setState(() {
-      if (oldIndex < newIndex) {
-        newIndex -= 1;
-      }
-      final letter = _collectedLetters.removeAt(oldIndex);
-      _collectedLetters.insert(newIndex, letter);
-    });
-  }
-
-  void _onLetterRemoved(String letter, int index) {
-    setState(() {
-      _collectedLetters.removeAt(index);
-    });
-  }
-
-  double _calculateSpeedBonus() {
-    if (_lastWordTime == null) {
-      _lastWordTime = DateTime.now();
-      return 0.0;
-    }
-
-    final now = DateTime.now();
-    final timeDiff = now.difference(_lastWordTime!).inSeconds;
-    _lastWordTime = now;
-
-    if (timeDiff > GameConstants.speedBonusTimeWindow) return 0.0;
-
-    return (GameConstants.speedBonusTimeWindow - timeDiff) / 
-           GameConstants.speedBonusTimeWindow * 
-           GameConstants.speedBonusMax;
-  }
-
-  void _onSubmitWord() async {
-    final word = _collectedLetters.join();
-    if (word.length < GameConstants.minWordLength) return;
-
-    final isValid = await _dictionaryService.isValidWord(word);
-
-    if (isValid) {
-      // Calculate score with bonuses
-      double baseScore = word.length.toDouble();
-      double multiplier = 1.0;
-      
-      // Length bonus
-      if (word.length >= 5) {
-        multiplier = GameConstants.fiveLetterBonus;
-      } else if (word.length == 4) {
-        multiplier = GameConstants.fourLetterBonus;
-      }
-
-      // Speed bonus
-      final speedBonus = _calculateSpeedBonus();
-      multiplier += speedBonus;
-
-      final points = (baseScore * multiplier).round();
-
-      // Calculate center position of collected letters for animation
-      final RenderBox box = context.findRenderObject() as RenderBox;
-      final bottomPanelPosition = box.localToGlobal(Offset.zero);
-      _lastWordPosition = Offset(
-        bottomPanelPosition.dx + box.size.width / 2,
-        bottomPanelPosition.dy + box.size.height / 2,
-      );
-      
-      setState(() {
-        _score += points;
-        _lastPoints = points;
-        _lastMultiplier = multiplier;
-        _showScoreAnimation = true;
-        _collectedLetters.clear();
-        _level++;
-        _startGameTimer(); // Reset timer for next level
-      });
-
-      // Reset animation flag after animation completes
-      Future.delayed(const Duration(milliseconds: 1200), () {
-        if (mounted) {
+    
+    try {
+      final word = _gameState.collectedLetters.value.join().toUpperCase();
+      final success = await _gameManager.submitWord();
+      if (success) {
+        // Show score breakdown
+        _showScoreBreakdown(word, _lastPoints);
+        
+        // Calculate animation position from header score
+        final RenderBox? box = _scoreKey.currentContext?.findRenderObject() as RenderBox?;
+        if (box != null) {
+          final position = box.localToGlobal(
+            Offset(box.size.width / 2, box.size.height / 2)
+          );
           setState(() {
-            _showScoreAnimation = false;
+            _lastWordPosition = position;
+            _showScoreAnimation = true;
           });
         }
-      });
-    } else {
-      _endGame();
-    }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    final isTimeLow = _timeLeft <= GameConstants.lowTimeThreshold;
-
-    return Scaffold(
-      body: RewardAnimations(
-        scoreKey: _scoreKey,
-        showConfetti: _showScoreAnimation,
-        scoreStartPosition: _lastWordPosition,
-        points: _lastPoints,
-        multiplier: _lastMultiplier,
-        onAnimationComplete: () {
+        // Reset animation flag after animation completes
+        Future.delayed(const Duration(milliseconds: 1200), () {
           if (mounted) {
             setState(() {
               _showScoreAnimation = false;
             });
           }
-        },
-        child: Stack(
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF00C6FF),
-                    Color(0xFF0072FF),
-                  ],
-                ),
-              ),
+        });
+      } else {
+        _showError('Invalid word');
+      }
+    } catch (e) {
+      _showError('Error submitting word');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  void _handleLetterTap(AnimatedLetter letter) {
+    if (_gameState.collectedLetters.value.length >= GameConstants.maxCollectedLetters) {
+      _showError('Maximum ${GameConstants.maxCollectedLetters} letters allowed');
+      return;
+    }
+    
+    // Add letter to tray
+    _gameState.addCollectedLetter(letter.letter);
+    
+    // Start despawn animation
+    letter.startDespawnAnimation();
+    
+    // Remove letter from game area
+    setState(() {
+      _letters.remove(letter);
+      _gameManager.onLetterCollected(); // Notify manager to spawn new letter
+    });
+  }
+
+  @override
+  void dispose() {
+    _gameManager.dispose();
+    _gameState.dispose();
+    for (final letter in _letters) {
+      letter.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: ThemeConstants.backgroundGradient,
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(ThemeConstants.white),
             ),
-            Stack(
-              children: [
-                SafeArea(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Level $_level',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Container(
-                              key: _scoreKey,
-                              child: Text(
-                                'Score: $_score',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isTimeLow ? Colors.red.withOpacity(0.3) : Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                '$_timeLeft',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: isTimeLow ? Colors.red : Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                      BottomPanel(
-                        letters: _collectedLetters,
-                        onClear: _onClearLetters,
-                        onReorder: _onReorderLetters,
-                        onLetterRemoved: _onLetterRemoved,
-                        onSubmit: _onSubmitWord,
-                      ),
-                    ],
+          ),
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: ThemeConstants.backgroundGradient,
+          ),
+          child: SafeArea(
+        child: RewardAnimations(
+          scoreKey: _scoreKey,
+          showConfetti: _showScoreAnimation,
+          scoreStartPosition: _lastWordPosition,
+          points: _lastPoints,
+          multiplier: _lastMultiplier,
+          onAnimationComplete: () {
+            if (mounted) {
+              setState(() {
+                _showScoreAnimation = false;
+              });
+            }
+          },
+          child: Stack(
+            children: [
+              // Background waves
+              const Positioned.fill(
+                child: WaveBackground(),
+              ),
+              // Game layout
+              Column(
+                children: [
+                  // Header
+                  ValueListenableBuilder<int>(
+                    valueListenable: _gameState.score,
+                    builder: (context, score, _) {
+                      return ValueListenableBuilder<int>(
+                        valueListenable: _gameState.level,
+                        builder: (context, level, _) {
+                          return ValueListenableBuilder<int>(
+                            valueListenable: _gameState.timeLeft,
+                            builder: (context, timeLeft, _) {
+                              return GameHeader(
+                                level: level,
+                                score: score,
+                                timeLeft: timeLeft,
+                                scoreKey: _scoreKey,
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
                   ),
-                ),
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 70.0, bottom: 100.0),
-                    child: Stack(
-                      children: [
-                        for (final letter in _spawnedLetters)
-                          LetterTile(
-                            key: ValueKey(letter),
-                            letter: letter,
-                            onTap: () => _onLetterTapped(letter),
-                          ),
-                      ],
+                  // Game area with letters
+                  Expanded(
+                    child: GameArea(
+                      letters: _letters,
+                      onLetterTapped: _handleLetterTap,
                     ),
                   ),
+                  // Bottom panel
+                  ValueListenableBuilder<List<String>>(
+                    valueListenable: _gameState.collectedLetters,
+                    builder: (context, letters, _) {
+                      return BottomPanel(
+                        letters: letters,
+                        onClear: _gameState.clearCollectedLetters,
+                        onReorder: _gameState.reorderCollectedLetters,
+                        onLetterRemoved: _gameState.removeCollectedLetter,
+                        onSubmit: _onSubmitWord,
+                      );
+                    },
+                  ),
+                ],
+              ),
+              // Game over overlay
+              if (_isGameOver)
+                ValueListenableBuilder<int>(
+                  valueListenable: _gameState.score,
+                  builder: (context, score, _) {
+                    return ValueListenableBuilder<int>(
+                      valueListenable: _gameState.level,
+                      builder: (context, level, _) {
+                        return GameOverOverlay(
+                          finalScore: score,
+                          level: level,
+                          onRestart: _restartGame,
+                        );
+                      },
+                    );
+                  },
                 ),
-              ],
-            ),
-          ],
+              // Round summary overlay
+              if (_showRoundSummary)
+                RoundSummaryOverlay(
+                  roundScore: _roundScore,
+                  bestWord: _bestWord,
+                  bestWordScore: _bestWordScore,
+                  nextLevel: _nextLevel,
+                  onContinue: _continueToNextRound,
+                ),
+            ],
+          ),
+        ),
+          ),
         ),
       ),
     );

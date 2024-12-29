@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/dictionary_service.dart';
 import '../services/game_service.dart';
+import '../constants/theme_constants.dart';
 import 'game_screen.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -26,8 +27,15 @@ class _LoadingScreenState extends State<LoadingScreen> {
     
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const GameScreen(),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const GameScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
         ),
       );
     }
@@ -35,9 +43,20 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: ThemeConstants.backgroundGradient,
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(ThemeConstants.white),
+            ),
+          ),
+        ),
       ),
     );
   }

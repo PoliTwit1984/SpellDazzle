@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../constants/theme_constants.dart';
 
-class GameOverOverlay extends StatelessWidget {
-  final int finalScore;
-  final int level;
-  final VoidCallback onRestart;
+class RoundSummaryOverlay extends StatelessWidget {
+  final int roundScore;
+  final String bestWord;
+  final int bestWordScore;
+  final int nextLevel;
+  final VoidCallback onContinue;
 
-  const GameOverOverlay({
+  const RoundSummaryOverlay({
     super.key,
-    required this.finalScore,
-    required this.level,
-    required this.onRestart,
+    required this.roundScore,
+    required this.bestWord,
+    required this.bestWordScore,
+    required this.nextLevel,
+    required this.onContinue,
   });
 
   @override
@@ -35,34 +39,50 @@ class GameOverOverlay extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Game Over',
+              Text(
+                'Round Complete!',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: ThemeConstants.primaryColor,
                 ),
               ),
               const SizedBox(height: 24),
               Text(
-                'Final Score: $finalScore',
+                'Round Score: $roundScore',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w500,
                   color: Colors.black87,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Text(
-                'Level Reached: $level',
+                'Best Word: $bestWord',
                 style: const TextStyle(
                   fontSize: 20,
+                  color: Colors.black87,
+                ),
+              ),
+              Text(
+                'Word Score: $bestWordScore',
+                style: const TextStyle(
+                  fontSize: 18,
                   color: Colors.black54,
                 ),
               ),
               const SizedBox(height: 32),
+              Text(
+                'Starting Level $nextLevel',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                  color: ThemeConstants.accentColor,
+                ),
+              ),
+              const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: onRestart,
+                onPressed: onContinue,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ThemeConstants.primaryColor,
                   padding: const EdgeInsets.symmetric(
@@ -74,7 +94,7 @@ class GameOverOverlay extends StatelessWidget {
                   ),
                 ),
                 child: const Text(
-                  'Play Again',
+                  'Continue',
                   style: TextStyle(
                     fontSize: 20,
                     color: Colors.white,

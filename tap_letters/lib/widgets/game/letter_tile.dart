@@ -1,4 +1,7 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../constants/layout_constants.dart';
+import '../../constants/theme_constants.dart';
 import '../../models/spawned_letter.dart';
 
 class LetterTile extends StatefulWidget {
@@ -88,65 +91,37 @@ class _LetterTileState extends State<LetterTile> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: widget.letter.position.dx,
-      top: widget.letter.position.dy,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Transform.translate(
-            offset: Offset(0, _bobAnimation.value),
-            child: Transform.rotate(
-              angle: _rotationAnimation.value,
-              child: Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Opacity(
-                  opacity: _fadeAnimation.value,
-                  child: GestureDetector(
-                    onTap: widget.onTap,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF00C6FF),
-                            Color(0xFF0072FF),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0072FF).withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, _bobAnimation.value),
+          child: Transform.rotate(
+            angle: _rotationAnimation.value,
+            child: Transform.scale(
+              scale: _scaleAnimation.value,
+              child: Opacity(
+                opacity: _fadeAnimation.value,
+                child: GestureDetector(
+                  onTap: widget.onTap,
+                  child: Container(
+                    width: LayoutConstants.letterTileSize,
+                    height: LayoutConstants.letterTileSize,
+                    padding: EdgeInsets.all(LayoutConstants.letterTilePadding),
+                    decoration: ThemeConstants.letterTileDecoration,
+                    child: Center(
                       child: Text(
                         widget.letter.letter,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black26,
-                              offset: Offset(0, 1),
-                              blurRadius: 2,
-                            ),
-                          ],
-                        ),
+                        style: ThemeConstants.letterTextStyle,
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

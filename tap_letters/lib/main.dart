@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/loading_screen.dart';
+import 'constants/theme_constants.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,8 +17,22 @@ class TapLettersApp extends StatelessWidget {
     return MaterialApp(
       title: 'Tap Letters',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        scaffoldBackgroundColor: Colors.transparent,
+        canvasColor: Colors.transparent,
+        dialogBackgroundColor: Colors.transparent,
+        colorScheme: ColorScheme.dark(
+          primary: ThemeConstants.primaryColor,
+          background: Colors.transparent,
+          surface: Colors.transparent,
+          shadow: Colors.transparent,
+        ),
         useMaterial3: true,
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+          },
+        ),
       ),
       home: const LoadingScreen(),
     );
