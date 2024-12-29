@@ -84,12 +84,12 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
     super.dispose();
   }
 
-  Widget _buildAnimatedScore(String text, TextStyle style, {Offset? startOffset, Duration? delay}) {
+  Widget _buildAnimatedScore(String label, String value, TextStyle style, {Offset? startOffset, Duration? delay, bool isRoundScore = false}) {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        final delaySeconds = (delay ?? Duration.zero).inMilliseconds / 500; // Faster delays
-        final adjustedValue = math.max(0.0, (_controller.value - delaySeconds) * 4.0); // Faster animations
+        final delaySeconds = (delay ?? Duration.zero).inMilliseconds / 500;
+        final adjustedValue = math.max(0.0, (_controller.value - delaySeconds) * 4.0);
         final progress = math.min(1.0, adjustedValue);
         
         final offset = Offset.lerp(
@@ -98,38 +98,99 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
           Curves.elasticOut.transform(progress),
         ) ?? Offset.zero;
 
+        final scoreScale = isRoundScore 
+          ? 1.0 + (math.sin(_controller.value * math.pi * 4) * 0.1)
+          : 1.0;
+
         return Transform.translate(
           offset: offset * 100,
           child: Opacity(
             opacity: progress,
-            child: child,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(isRoundScore ? 0.15 : 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+                boxShadow: isRoundScore ? [
+                  BoxShadow(
+                    color: ThemeConstants.primaryColor.withOpacity(0.2),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ] : [],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ShaderMask(
+                    shaderCallback: (bounds) {
+                      return LinearGradient(
+                        colors: [
+                          Colors.white,
+                          ThemeConstants.primaryColor,
+                        ],
+                        stops: [0.0, 0.7],
+                      ).createShader(bounds);
+                    },
+                    child: Text(
+                      label,
+                      style: style.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black,
+                            blurRadius: 12,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Transform.scale(
+                    scale: scoreScale,
+                    child: ShaderMask(
+                      shaderCallback: (bounds) {
+                        return LinearGradient(
+                          colors: [
+                            Colors.white,
+                            isRoundScore ? ThemeConstants.accentColor : ThemeConstants.primaryColor,
+                          ],
+                          stops: [0.0, 0.7],
+                        ).createShader(bounds);
+                      },
+                      child: Text(
+                        value,
+                        style: style.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black,
+                              blurRadius: 12,
+                              offset: const Offset(0, 2),
+                            ),
+                            Shadow(
+                              color: isRoundScore ? ThemeConstants.accentColor : ThemeConstants.primaryColor,
+                              blurRadius: 16,
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
-      child: ShaderMask(
-        shaderCallback: (bounds) {
-          return LinearGradient(
-            colors: [
-              ThemeConstants.primaryColor,
-              ThemeConstants.accentColor,
-            ],
-            stops: [0.0, 0.5],
-          ).createShader(bounds);
-        },
-        child: Text(
-          text,
-          style: style.copyWith(
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                color: ThemeConstants.primaryColor,
-                blurRadius: 16,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -143,23 +204,27 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
             shaderCallback: (bounds) {
               return LinearGradient(
                 colors: [
+                  Colors.white,
                   ThemeConstants.primaryColor,
-                  ThemeConstants.accentColor.withOpacity(0.8),
                 ],
-                stops: [
-                  _controller.value,
-                  _controller.value + 0.5,
-                ],
+                stops: [0.0, 0.7],
               ).createShader(bounds);
             },
             child: Text(
               text,
               style: style.copyWith(
                 color: Colors.white,
+                fontWeight: FontWeight.w700,
                 shadows: [
                   Shadow(
-                    color: ThemeConstants.primaryColor.withOpacity(0.7),
-                    blurRadius: 12 + (math.sin(_controller.value * math.pi * 3) * 6),
+                    color: Colors.black,
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
+                  ),
+                  Shadow(
+                    color: ThemeConstants.primaryColor,
+                    blurRadius: 16 + (math.sin(_controller.value * math.pi * 3) * 6),
+                    offset: const Offset(0, 0),
                   ),
                 ],
               ),
@@ -223,7 +288,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
     return Container(
       decoration: BoxDecoration(
         gradient: ThemeConstants.backgroundGradient.scale(0.8),
-        color: Colors.black.withOpacity(0.3), // Darkens the background
+        color: Colors.black.withOpacity(0.4),
       ),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
@@ -240,7 +305,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                     margin: const EdgeInsets.all(32.0),
                     padding: const EdgeInsets.all(24.0),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4), // Darker container background
+                      color: Colors.black.withOpacity(0.7),
                       borderRadius: BorderRadius.circular(16.0),
                       border: Border.all(
                         color: Colors.white.withOpacity(0.3),
@@ -248,9 +313,9 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 10,
-                          spreadRadius: 5,
+                          color: Colors.black.withOpacity(0.4),
+                          blurRadius: 20,
+                          spreadRadius: 10,
                         ),
                       ],
                     ),
@@ -264,16 +329,19 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                         const SizedBox(height: 24),
                         if (_showScores) ...[
                           _buildAnimatedScore(
-                            'Round Score: ${widget.roundScore}',
+                            'Round Score:', 
+                            '${widget.roundScore}',
                             ThemeConstants.scoreTextStyle.copyWith(
                               fontSize: 24,
                             ),
                             startOffset: const Offset(-1, 0),
                             delay: const Duration(milliseconds: 100),
+                            isRoundScore: true,
                           ),
                           const SizedBox(height: 16),
                           _buildAnimatedScore(
-                            'Best Word: ${widget.bestWord}',
+                            'Best Word:', 
+                            widget.bestWord,
                             ThemeConstants.scoreTextStyle.copyWith(
                               fontSize: 20,
                             ),
@@ -281,19 +349,20 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                             delay: const Duration(milliseconds: 200),
                           ),
                           _buildAnimatedScore(
-                            'Word Score: ${widget.bestWordScore}',
+                            'Word Score:', 
+                            '${widget.bestWordScore}',
                             ThemeConstants.scoreTextStyle.copyWith(
                               fontSize: 18,
-                              color: ThemeConstants.white.withOpacity(0.8),
                             ),
                             startOffset: const Offset(-1, 0),
                             delay: const Duration(milliseconds: 300),
                           ),
                           const SizedBox(height: 32),
                           _buildAnimatedScore(
-                            'Starting Level ${widget.nextLevel}',
+                            'Starting Level', 
+                            '${widget.nextLevel}',
                             ThemeConstants.scoreTextStyle.copyWith(
-                              color: ThemeConstants.accentColor,
+                              fontSize: 20,
                             ),
                             startOffset: const Offset(1, 0),
                             delay: const Duration(milliseconds: 400),
