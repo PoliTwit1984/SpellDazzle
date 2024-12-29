@@ -1,6 +1,64 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../constants/game_constants.dart';
+import '../constants/theme_constants.dart';
+
+class LetterStyle {
+  final double size;
+  final double cornerRadius;
+  final Color color;
+  final double rotation;
+  final double shadowIntensity;
+
+  const LetterStyle({
+    required this.size,
+    required this.cornerRadius,
+    required this.color,
+    required this.rotation,
+    required this.shadowIntensity,
+  });
+
+  factory LetterStyle.random() {
+    final random = Random();
+    
+    // Size variation: ±15%
+    final sizeVariation = SpawnedLetter.letterSize * (0.90 + (random.nextDouble() * 0.2));
+    
+    // Corner radius variation: 4-20
+    final cornerVariation = 4.0 + (random.nextDouble() * 16.0);
+    
+    // Color variation - use multiple base colors
+    final baseColors = [
+      ThemeConstants.primaryColor,
+      Color(0xFF4CAF50), // Green
+      Color(0xFFFFA726), // Orange
+      Color(0xFF7E57C2), // Purple
+      Color(0xFF26C6DA), // Cyan
+    ];
+    
+    final baseColor = baseColors[random.nextInt(baseColors.length)];
+    final hslColor = HSLColor.fromColor(baseColor);
+    
+    // Wider saturation and lightness ranges
+    final saturation = (0.6 + random.nextDouble() * 0.4).clamp(0.0, 1.0); // 0.6-1.0
+    final lightness = (0.4 + random.nextDouble() * 0.4).clamp(0.0, 0.8); // 0.4-0.8
+    final variedColor = hslColor.withSaturation(saturation).withLightness(lightness).toColor();
+    
+    // More rotation: ±15 degrees
+    final rotationVariation = (random.nextDouble() - 0.5) * 0.52; // ~±15 degrees in radians
+    
+    // Shadow intensity variation: 0.1-0.35
+    final shadowVariation = 0.1 + (random.nextDouble() * 0.25);
+
+    return LetterStyle(
+      size: sizeVariation,
+      cornerRadius: cornerVariation,
+      color: variedColor,
+      rotation: rotationVariation,
+      shadowIntensity: shadowVariation,
+    );
+  }
+}
 
 class SpawnedLetter {
   final String letter;
@@ -8,6 +66,7 @@ class SpawnedLetter {
   final DateTime spawnTime;
   final double lifetimeSeconds;
   Offset velocity;
+  final LetterStyle style;
   
   // Movement constants
   static const double bounceEnergy = 0.95; // Higher energy retention for smoother movement
@@ -24,10 +83,12 @@ class SpawnedLetter {
     DateTime? spawnTime,
     Offset? velocity,
     double? lifetimeSeconds,
+    LetterStyle? style,
   }) : 
     spawnTime = spawnTime ?? DateTime.now(),
     velocity = velocity ?? _generateRandomVelocity(),
-    lifetimeSeconds = lifetimeSeconds ?? _getNextLifetime();
+    lifetimeSeconds = lifetimeSeconds ?? _getNextLifetime(),
+    style = style ?? LetterStyle.random();
 
   static Offset _generateRandomVelocity() {
     final random = Random();
@@ -140,6 +201,7 @@ class SpawnedLetter {
     DateTime? spawnTime,
     Offset? velocity,
     double? lifetimeSeconds,
+    LetterStyle? style,
   }) {
     return SpawnedLetter(
       letter: letter ?? this.letter,
@@ -147,6 +209,7 @@ class SpawnedLetter {
       spawnTime: spawnTime ?? this.spawnTime,
       velocity: velocity ?? this.velocity,
       lifetimeSeconds: lifetimeSeconds ?? this.lifetimeSeconds,
+      style: style ?? this.style,
     );
   }
 

@@ -9,6 +9,23 @@ class ThemeConstants {
   static const Color secondaryTextColor = Color(0xFF757575);
   static const Color dangerColor = Colors.red;
   static const Color white = Colors.white;
+
+  // Letter Tile Colors
+  static const List<Color> letterColors = [
+    Color(0xFF2196F3), // Blue
+    Color(0xFF4CAF50), // Green
+    Color(0xFFFFA726), // Orange
+    Color(0xFF7E57C2), // Purple
+    Color(0xFF26C6DA), // Cyan
+  ];
+
+  // Visual Effects
+  static const double minLetterScale = 0.90;
+  static const double maxLetterScale = 1.10;
+  static const double minCornerRadius = 4.0;
+  static const double maxCornerRadius = 20.0;
+  static const double minShadowIntensity = 0.1;
+  static const double maxShadowIntensity = 0.35;
   
   // Gradients
   static const LinearGradient backgroundGradient = LinearGradient(

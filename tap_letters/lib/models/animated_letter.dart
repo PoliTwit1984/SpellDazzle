@@ -2,12 +2,19 @@ import 'dart:math';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../constants/game_constants.dart';
+import '../constants/theme_constants.dart';
 
 class AnimatedLetter {
   final String letter;
   final TickerProvider vsync;
   final VoidCallback onExpire;
   final Random random = Random();
+  
+  // Visual style
+  final Color baseColor;
+  final double cornerRadius;
+  final double shadowIntensity;
+  final double sizeVariation;
   
   // Position update timer
   Timer? _positionTimer;
@@ -40,7 +47,14 @@ class AnimatedLetter {
     required Offset initialPosition,
     required this.vsync,
     required this.onExpire,
-  }) {
+  }) : baseColor = ThemeConstants.letterColors[Random().nextInt(ThemeConstants.letterColors.length)],
+       cornerRadius = ThemeConstants.minCornerRadius + 
+                     (Random().nextDouble() * (ThemeConstants.maxCornerRadius - ThemeConstants.minCornerRadius)),
+       shadowIntensity = ThemeConstants.minShadowIntensity + 
+                        (Random().nextDouble() * (ThemeConstants.maxShadowIntensity - ThemeConstants.minShadowIntensity)),
+       sizeVariation = ThemeConstants.minLetterScale + 
+                      (Random().nextDouble() * (ThemeConstants.maxLetterScale - ThemeConstants.minLetterScale)) {
+    
     // Initialize position update timer (60 FPS)
     _positionTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       _updatePosition();

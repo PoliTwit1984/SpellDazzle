@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../constants/layout_constants.dart';
 import '../../constants/theme_constants.dart';
+import '../../constants/game_constants.dart';
 import '../../models/animated_letter.dart';
 
 class RotatingLetterTile extends StatefulWidget {
@@ -66,14 +67,56 @@ class _RotatingLetterTileState extends State<RotatingLetterTile> with SingleTick
           child: GestureDetector(
             onTap: widget.onTap,
             child: Container(
-              width: LayoutConstants.letterTileSize,
-              height: LayoutConstants.letterTileSize,
+              width: LayoutConstants.letterTileSize * widget.letter.sizeVariation,
+              height: LayoutConstants.letterTileSize * widget.letter.sizeVariation,
               padding: EdgeInsets.all(LayoutConstants.letterTilePadding),
-              decoration: ThemeConstants.letterTileDecoration,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    widget.letter.baseColor,
+                    Color.lerp(widget.letter.baseColor, Colors.white, 0.2) ?? widget.letter.baseColor,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(widget.letter.cornerRadius),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.letter.baseColor.withOpacity(widget.letter.shadowIntensity * 0.5),
+                    blurRadius: 8 + (widget.letter.shadowIntensity * 8),
+                    spreadRadius: 2,
+                    offset: Offset(0, 2 + (widget.letter.shadowIntensity * 2)),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(widget.letter.shadowIntensity * 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Center(
                 child: Text(
                   widget.letter.letter,
-                  style: ThemeConstants.letterTextStyle,
+                  style: ThemeConstants.letterTextStyle.copyWith(
+                    fontSize: (widget.letter.sizeVariation * LayoutConstants.letterTileSize / GameConstants.letterSize) * 28,
+                    fontWeight: FontWeight.w800,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                      Shadow(
+                        color: widget.letter.baseColor.withOpacity(0.5),
+                        blurRadius: 8,
+                        offset: const Offset(0, 0),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

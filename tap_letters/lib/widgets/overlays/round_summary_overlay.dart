@@ -34,7 +34,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 5000),
+      duration: const Duration(milliseconds: 10000),
       vsync: this,
     );
 
@@ -61,7 +61,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
         });
       }
       
-      final newCountdown = 5 - (_controller.value * 5).floor();
+      final newCountdown = 10 - (_controller.value * 10).floor();
       if (newCountdown != _countdown) {
         setState(() {
           _countdown = newCountdown;
@@ -99,93 +99,126 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
         ) ?? Offset.zero;
 
         final scoreScale = isRoundScore 
-          ? 1.0 + (math.sin(_controller.value * math.pi * 4) * 0.1)
+          ? 1.0 + (math.sin(_controller.value * math.pi * 6) * 0.15)
+          : 1.0;
+
+        final glowOpacity = isRoundScore
+          ? 0.5 + (math.sin(_controller.value * math.pi * 4) * 0.3)
+          : 0.0;
+
+        final containerScale = isRoundScore
+          ? 1.0 + (math.sin(_controller.value * math.pi * 3) * 0.05)
           : 1.0;
 
         return Transform.translate(
           offset: offset * 100,
           child: Opacity(
             opacity: progress,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(isRoundScore ? 0.15 : 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.2),
-                  width: 1,
-                ),
-                boxShadow: isRoundScore ? [
-                  BoxShadow(
-                    color: ThemeConstants.primaryColor.withOpacity(0.2),
-                    blurRadius: 8,
-                    spreadRadius: 2,
+            child: Transform.scale(
+              scale: containerScale,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(isRoundScore ? 0.2 : 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1,
                   ),
-                ] : [],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ShaderMask(
-                    shaderCallback: (bounds) {
-                      return LinearGradient(
-                        colors: [
-                          Colors.white,
-                          ThemeConstants.primaryColor,
-                        ],
-                        stops: [0.0, 0.7],
-                      ).createShader(bounds);
-                    },
-                    child: Text(
-                      label,
-                      style: style.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black,
-                            blurRadius: 12,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                  boxShadow: [
+                    if (isRoundScore) ...[
+                      BoxShadow(
+                        color: ThemeConstants.primaryColor.withOpacity(0.3),
+                        blurRadius: 12,
+                        spreadRadius: 2,
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Transform.scale(
-                    scale: scoreScale,
-                    child: ShaderMask(
+                      BoxShadow(
+                        color: ThemeConstants.accentColor.withOpacity(glowOpacity),
+                        blurRadius: 20,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ShaderMask(
                       shaderCallback: (bounds) {
                         return LinearGradient(
                           colors: [
                             Colors.white,
-                            isRoundScore ? ThemeConstants.accentColor : ThemeConstants.primaryColor,
+                            ThemeConstants.primaryColor,
                           ],
-                          stops: [0.0, 0.7],
+                          stops: const [0.0, 0.7],
                         ).createShader(bounds);
                       },
                       child: Text(
-                        value,
+                        label,
                         style: style.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w500,
                           shadows: [
                             Shadow(
                               color: Colors.black,
                               blurRadius: 12,
                               offset: const Offset(0, 2),
                             ),
-                            Shadow(
-                              color: isRoundScore ? ThemeConstants.accentColor : ThemeConstants.primaryColor,
-                              blurRadius: 16,
-                              offset: const Offset(0, 0),
-                            ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Transform.scale(
+                      scale: scoreScale,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: isRoundScore ? BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ThemeConstants.accentColor.withOpacity(glowOpacity * 0.5),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ) : null,
+                        child: ShaderMask(
+                          shaderCallback: (bounds) {
+                            return LinearGradient(
+                              colors: [
+                                Colors.white,
+                                isRoundScore ? ThemeConstants.accentColor : ThemeConstants.primaryColor,
+                              ],
+                              stops: const [0.0, 0.7],
+                            ).createShader(bounds);
+                          },
+                          child: Text(
+                            value,
+                            style: style.copyWith(
+                              color: Colors.white,
+                              fontWeight: isRoundScore ? FontWeight.w800 : FontWeight.w700,
+                              letterSpacing: isRoundScore ? 1.2 : 1.0,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black,
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 2),
+                                ),
+                                Shadow(
+                                  color: isRoundScore ? ThemeConstants.accentColor : ThemeConstants.primaryColor,
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 0),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -207,7 +240,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                   Colors.white,
                   ThemeConstants.primaryColor,
                 ],
-                stops: [0.0, 0.7],
+                stops: const [0.0, 0.7],
               ).createShader(bounds);
             },
             child: Text(
@@ -239,44 +272,113 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
     return AnimatedBuilder(
       animation: _countdownAnimation,
       builder: (context, child) {
-        final pulseScale = 1.0 + (math.sin(_controller.value * math.pi * 6) * 0.1);
+        final timeLeft = _countdown;
+        final isUrgent = timeLeft <= 3;
+        final isWarning = timeLeft <= 7;
+        
+        // Scale and intensity increase as time decreases
+        final progress = timeLeft / 10.0; // 0.0 to 1.0
+        final inverseProgress = 1.0 - progress;
+        
+        // Base values increase as time decreases
+        final baseScale = 1.0 + (inverseProgress * 0.5); // 1.0 to 1.5
+        final pulseIntensity = 0.1 + (inverseProgress * 0.3); // 0.1 to 0.4
+        final pulseFrequency = 6.0 + (inverseProgress * 18.0); // 6.0 to 24.0
+        
+        // Multiple waves for complex pulsing
+        final fastPulse = math.sin(_controller.value * math.pi * pulseFrequency);
+        final mediumPulse = math.sin(_controller.value * math.pi * (pulseFrequency * 0.7));
+        final slowPulse = math.sin(_controller.value * math.pi * (pulseFrequency * 0.4));
+        final pulseScale = baseScale + ((fastPulse * 0.5 + mediumPulse * 0.3 + slowPulse * 0.2) * pulseIntensity);
+        
+        // Progressive shake effect
+        final shakeIntensity = inverseProgress * 12.0; // 0.0 to 12.0
+        final shakeX = isUrgent || isWarning 
+          ? math.sin(_controller.value * math.pi * pulseFrequency * 2) * shakeIntensity
+          : 0.0;
+        final shakeY = isUrgent || isWarning
+          ? math.cos(_controller.value * math.pi * pulseFrequency * 2) * shakeIntensity
+          : 0.0;
+        
+        // Dynamic glow effect
+        final glowOpacity = 0.3 + (inverseProgress * 0.5) + (fastPulse * 0.2);
+        
+        // Smooth color transition
+        final Color color;
+        if (timeLeft <= 3) {
+          color = ThemeConstants.dangerColor;
+        } else if (timeLeft <= 7) {
+          final warningProgress = (timeLeft - 3) / 4.0;
+          color = Color.lerp(ThemeConstants.dangerColor, Colors.orange, warningProgress) ?? Colors.orange;
+        } else {
+          final normalProgress = (timeLeft - 7) / 3.0;
+          color = Color.lerp(Colors.orange, Colors.white, normalProgress) ?? Colors.white;
+        }
         return Stack(
           alignment: Alignment.center,
           children: [
             Transform.scale(
-              scale: (1.0 + (1.0 - _countdownAnimation.value) * 0.5) * pulseScale,
+              scale: pulseScale,
               child: Container(
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: ThemeConstants.primaryColor.withOpacity(0.7),
-                    width: 3,
+                  color: color.withOpacity(isUrgent ? 0.9 : (isWarning ? 0.8 : 0.7)),
+                  width: isUrgent ? 5 : (isWarning ? 4 : 3),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(glowOpacity),
+                    blurRadius: isUrgent ? 30 : (isWarning ? 20 : 15),
+                    spreadRadius: isUrgent ? 10 : (isWarning ? 7 : 5),
                   ),
-                  boxShadow: [
+                  if (isUrgent || isWarning)
                     BoxShadow(
-                      color: ThemeConstants.primaryColor.withOpacity(0.3),
-                      blurRadius: 15,
-                      spreadRadius: 5,
+                      color: ThemeConstants.dangerColor.withOpacity(glowOpacity * 0.5),
+                      blurRadius: isUrgent ? 25 : 15,
+                      spreadRadius: isUrgent ? 12 : 8,
                     ),
-                  ],
+                ],
                 ),
               ),
             ),
             CircularProgressIndicator(
               value: _countdownAnimation.value,
-              strokeWidth: 4,
+              strokeWidth: isUrgent ? 6 : (isWarning ? 5 : 4),
               valueColor: AlwaysStoppedAnimation<Color>(
-                ThemeConstants.primaryColor.withOpacity(0.8 + (math.sin(_controller.value * math.pi * 6) * 0.2)),
+                color.withOpacity(0.8 + (fastPulse * 0.2)),
               ),
             ),
-            _buildPulsingText(
-              _countdown.toString(),
-              ThemeConstants.headerTextStyle.copyWith(
-                fontSize: 36,
+              Transform.translate(
+                offset: Offset(shakeX, shakeY),
+                child: Transform.scale(
+                  scale: isUrgent ? 1.3 : (isWarning ? 1.2 : 1.0),
+                  child: _buildPulsingText(
+                    _countdown.toString(),
+                    ThemeConstants.headerTextStyle.copyWith(
+                      fontSize: 36 + (inverseProgress * 24), // 36 to 60
+                      color: color,
+                      letterSpacing: 1.0 + (inverseProgress * 3.0), // 1.0 to 4.0
+                      fontWeight: isUrgent ? FontWeight.w900 : (isWarning ? FontWeight.w800 : FontWeight.w700),
+                      shadows: [
+                        Shadow(
+                          color: color.withOpacity(0.8),
+                          blurRadius: 10 + (inverseProgress * 20),
+                          offset: const Offset(0, 2),
+                        ),
+                        if (isWarning || isUrgent)
+                          Shadow(
+                            color: ThemeConstants.dangerColor.withOpacity(glowOpacity * 0.5),
+                            blurRadius: 20,
+                            offset: const Offset(0, 0),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
           ],
         );
       },
@@ -287,11 +389,17 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: ThemeConstants.backgroundGradient.scale(0.8),
-        color: Colors.black.withOpacity(0.4),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withOpacity(0.3),
+            ThemeConstants.primaryColor.withOpacity(0.1),
+          ],
+        ),
       ),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
         child: Center(
           child: TweenAnimationBuilder(
             duration: const Duration(milliseconds: 300),
@@ -305,13 +413,25 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                     margin: const EdgeInsets.all(32.0),
                     padding: const EdgeInsets.all(24.0),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(16.0),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withOpacity(0.15),
+                          Colors.white.withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(24.0),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withOpacity(0.2),
                         width: 1,
                       ),
                       boxShadow: [
+                        BoxShadow(
+                          color: ThemeConstants.primaryColor.withOpacity(0.2),
+                          blurRadius: 30,
+                          spreadRadius: 5,
+                        ),
                         BoxShadow(
                           color: Colors.black.withOpacity(0.4),
                           blurRadius: 20,
