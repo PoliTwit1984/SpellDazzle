@@ -9,11 +9,17 @@
   - Automatic respawning when letters are collected
   - Smart positioning to prevent overlaps
 
-- **Letter Movement**
-  - Smooth floating animation with subtle acceleration
-  - Collision detection between letters
-  - Boundary detection to keep letters in play area
-  - Despawn animation when collected
+- **Letter Movement & Animation**
+  - **Core Movement**
+    - Smooth floating animation with subtle acceleration
+    - Collision detection between letters
+    - Boundary detection to keep letters in play area
+    - Despawn animation when collected
+  - **Enhanced Animations**
+    - Randomized rotation for each letter (0.05-0.1 radians)
+    - Variable animation speeds (1-2 seconds per cycle)
+    - Smooth easeInOut transitions
+    - Independent animation controllers per letter
 
 ### Word Formation
 - **Collection Mechanics**
@@ -57,6 +63,8 @@
   - Responsive touch targets
   - Shadow effects for depth
   - Clear typography
+  - Subtle rotation animations
+  - Randomized movement patterns
 
 - **Collection Tray**
   - Frosted glass effect
@@ -70,6 +78,8 @@
   - Soft collision responses
   - Fade-out collection effect
   - Scale animations for interactions
+  - Independent rotation system
+  - Customizable animation parameters
 
 - **Score Animations**
   - Point accumulation effects
@@ -107,6 +117,9 @@
   - Efficient collision detection
   - Optimized render cycles
   - Memory-conscious design
+  - Smart animation disposal
+  - Independent animation controllers
+  - Frame-rate optimized transforms
 
 ### State Management
 - **Game State**

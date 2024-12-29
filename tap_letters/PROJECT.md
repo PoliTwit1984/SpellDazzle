@@ -85,15 +85,27 @@ tap_letters/
   - onReorder: Reorder callback
   - onLetterRemoved: Throw back callback
 
-#### LetterTile
-- Individual letter display
-- Features:
-  - Tap to collect
-  - Visual feedback
-  - Animation support
-- Props:
-  - letter: SpawnedLetter object
-  - onTap: Collection callback
+#### Letter Display System
+- **LetterTile**
+  - Basic letter display for collection tray
+  - Features:
+    - Tap to collect
+    - Visual feedback
+    - Clean design
+  - Props:
+    - letter: SpawnedLetter object
+    - onTap: Collection callback
+
+- **RotatingLetterTile**
+  - Enhanced letter display for game area
+  - Features:
+    - Randomized rotation animation
+    - Customizable rotation range (0.05-0.1 radians)
+    - Variable animation speed (1-2 seconds)
+    - Smooth easeInOut transitions
+  - Props:
+    - letter: AnimatedLetter object
+    - onTap: Collection callback
 
 ### Constants
 
@@ -124,6 +136,11 @@ tap_letters/
 - Minimal rebuilds using proper widget structure
 - Memory management for letter spawning
 - Cached dictionary lookups
+- Optimized animation system:
+  - Independent rotation animations per letter
+  - Smooth frame rates with Transform widget
+  - Memory-efficient animation controllers
+  - Smart disposal of animation resources
 
 ### Responsive Design
 - Grid-based layout system

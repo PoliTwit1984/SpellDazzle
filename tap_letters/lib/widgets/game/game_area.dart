@@ -3,6 +3,7 @@ import '../../models/animated_letter.dart';
 import '../../constants/layout_constants.dart';
 import '../../constants/theme_constants.dart';
 import '../../constants/game_constants.dart';
+import 'rotating_letter_tile.dart';
 
 class GameArea extends StatefulWidget {
   final List<AnimatedLetter> letters;
@@ -63,33 +64,9 @@ class _GameAreaState extends State<GameArea> {
                             scale: letter.scale.value,
                             child: Opacity(
                               opacity: letter.opacity.value,
-                              child: GestureDetector(
+                              child: RotatingLetterTile(
+                                letter: letter,
                                 onTap: () => widget.onLetterTapped(letter),
-                                child: Container(
-                                  width: GameConstants.letterSize,
-                                  height: GameConstants.letterSize,
-                                  decoration: BoxDecoration(
-                                    color: ThemeConstants.primaryColor,
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      letter.letter,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
                               ),
                             ),
                           ),
