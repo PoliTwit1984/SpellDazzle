@@ -393,13 +393,15 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withOpacity(0.3),
-            ThemeConstants.primaryColor.withOpacity(0.1),
+            Colors.black.withOpacity(0.4),
+            ThemeConstants.letterColors[0].withOpacity(0.2),
+            ThemeConstants.letterColors[2].withOpacity(0.1),
           ],
+          stops: const [0.0, 0.6, 1.0],
         ),
       ),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+        filter: ImageFilter.blur(sigmaX: 30.0, sigmaY: 30.0),
         child: Center(
           child: TweenAnimationBuilder(
             duration: const Duration(milliseconds: 300),
@@ -417,25 +419,32 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.15),
+                          Colors.white.withOpacity(0.2),
                           Colors.white.withOpacity(0.05),
+                          Colors.white.withOpacity(0.02),
                         ],
+                        stops: const [0.0, 0.6, 1.0],
                       ),
-                      borderRadius: BorderRadius.circular(24.0),
+                      borderRadius: BorderRadius.circular(32.0),
                       border: Border.all(
                         color: Colors.white.withOpacity(0.2),
-                        width: 1,
+                        width: 2,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: ThemeConstants.primaryColor.withOpacity(0.2),
+                          color: ThemeConstants.letterColors[0].withOpacity(0.3),
+                          blurRadius: 40,
+                          spreadRadius: -5,
+                        ),
+                        BoxShadow(
+                          color: ThemeConstants.letterColors[2].withOpacity(0.2),
                           blurRadius: 30,
                           spreadRadius: 5,
                         ),
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
-                          blurRadius: 20,
-                          spreadRadius: 10,
+                          color: Colors.black.withOpacity(0.5),
+                          blurRadius: 25,
+                          spreadRadius: -10,
                         ),
                       ],
                     ),

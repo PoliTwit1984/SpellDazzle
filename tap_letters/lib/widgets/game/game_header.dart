@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../constants/theme_constants.dart';
 import '../../constants/layout_constants.dart';
+import 'animated_level_display.dart';
 
 class GameHeader extends StatelessWidget {
   final int level;
@@ -26,10 +27,7 @@ class GameHeader extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Level
-          Text(
-            'Level $level',
-            style: ThemeConstants.headerTextStyle,
-          ),
+          AnimatedLevelDisplay(level: level),
           // Score
           AnimatedScore(
             score: score,
@@ -116,14 +114,14 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
         final baseColor = ThemeConstants.accentColor;
         final white = Colors.white;
         
-        // Calculate glow color with null safety
-        final glowOpacityValue = (glowOpacity * 0.5).clamp(0.0, 1.0);
-        final borderOpacityValue = 0.3.clamp(0.0, 1.0);
-        final backgroundOpacityValue = 0.2.clamp(0.0, 1.0);
-        
         // Calculate interpolated color
         final lerpValue = (fastPulse * 0.5 + 0.5).clamp(0.0, 1.0);
         final glowColor = Color.lerp(baseColor, white, lerpValue) ?? baseColor;
+        
+        // Calculate opacities after color interpolation
+        final glowOpacityValue = (glowOpacity * 0.5).clamp(0.0, 1.0);
+        final borderOpacityValue = 0.3;
+        final backgroundOpacityValue = 0.2;
 
         return Transform.translate(
           offset: Offset(shakeX, shakeY),
@@ -136,15 +134,15 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
                 vertical: 8.0,
               ),
               decoration: BoxDecoration(
-                color: baseColor.withOpacity(backgroundOpacityValue),
+                color: baseColor.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(16.0),
                 border: Border.all(
-                  color: glowColor.withOpacity(borderOpacityValue),
+                  color: glowColor.withOpacity(0.3),
                   width: 1 + (intensity * 1),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: glowColor.withOpacity(glowOpacityValue),
+                    color: glowColor.withOpacity(0.5),
                     blurRadius: 10 + (intensity * 10),
                     spreadRadius: 2 + (intensity * 3),
                   ),
