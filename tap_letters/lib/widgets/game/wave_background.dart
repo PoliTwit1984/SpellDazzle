@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../services/background_engine.dart';
 
 class WaveBackground extends StatefulWidget {
-  const WaveBackground({super.key});
+  final int roundNumber;
+  
+  const WaveBackground({
+    super.key,
+    required this.roundNumber,
+  });
 
   @override
   State<WaveBackground> createState() => _WaveBackgroundState();
@@ -9,52 +15,73 @@ class WaveBackground extends StatefulWidget {
 
 class _WaveBackgroundState extends State<WaveBackground>
     with TickerProviderStateMixin {
-  late final List<AnimationController> _controllers;
-  
-  // Frost-colored waves with higher opacity for visibility
-  final List<Color> _colors = [
-    const Color(0xFFE1F5FE).withOpacity(0.25), // Frost color with higher opacity
-    const Color(0xFFB3E5FC).withOpacity(0.20), // Lighter frost color with higher opacity
-  ];
+  List<AnimationController>? _controllers;
+  List<WaveConfig>? _waveConfigs;
 
-  // Wave positions (relative to screen height)
-  final List<double> _positions = [0.30, 0.70]; // Slightly adjusted for better distribution
+  void _setupWaves() {
+    // Clean up existing controllers
+    if (_controllers != null) {
+      for (final controller in _controllers!) {
+        controller.stop();
+        controller.dispose();
+      }
+      _controllers = null;
+    }
 
-  @override
-  void initState() {
-    super.initState();
+    // Generate new configurations
+    _waveConfigs = BackgroundEngine.generateWaveConfigs(widget.roundNumber);
     
-    // Smooth horizontal movement
-    _controllers = List.generate(2, (index) {
+    // Create new controllers
+    _controllers = List.generate(_waveConfigs!.length, (index) {
       return AnimationController(
         vsync: this,
-        duration: Duration(seconds: 8 + index * 2), // 8s and 10s for more noticeable movement
-      )..repeat(reverse: index == 1); // Second wave oscillates
+        duration: Duration(seconds: _waveConfigs![index].speed.round()),
+      )..repeat(reverse: _waveConfigs![index].direction == WaveDirection.rightToLeft);
     });
   }
 
   @override
+  void initState() {
+    super.initState();
+    _setupWaves();
+  }
+
+  @override
+  void didUpdateWidget(WaveBackground oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.roundNumber != oldWidget.roundNumber) {
+      _setupWaves();
+    }
+  }
+
+  @override
   void dispose() {
-    for (final controller in _controllers) {
-      controller.dispose();
+    if (_controllers != null) {
+      for (final controller in _controllers!) {
+        controller.stop();
+        controller.dispose();
+      }
     }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_controllers == null || _waveConfigs == null) {
+      return const SizedBox.shrink();
+    }
+
     return Stack(
-      children: List.generate(2, (index) {
+      children: List.generate(_waveConfigs!.length, (index) {
+        final config = _waveConfigs![index];
         return AnimatedBuilder(
-          animation: _controllers[index],
+          animation: _controllers![index],
           builder: (context, child) {
             return CustomPaint(
               size: Size.infinite,
               painter: WavePainter(
-                progress: _controllers[index].value,
-                color: _colors[index],
-                yPosition: _positions[index],
-                isReversed: index == 1,
+                progress: _controllers![index].value,
+                config: config,
               ),
             );
           },
@@ -66,62 +93,54 @@ class _WaveBackgroundState extends State<WaveBackground>
 
 class WavePainter extends CustomPainter {
   final double progress;
-  final Color color;
-  final double yPosition;
-  final bool isReversed;
+  final WaveConfig config;
 
-  WavePainter({
+  const WavePainter({
     required this.progress,
-    required this.color,
-    required this.yPosition,
-    required this.isReversed,
+    required this.config,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color
+      ..color = config.color
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
 
     final path = Path();
     
-    // Wave parameters
     final width = size.width;
     final height = size.height;
-    final waveHeight = height * 0.06; // Slightly increased height for better visibility
+    final waveHeight = height * config.amplitude;
+    final wavelength = width * config.wavelength;
     
-    // Calculate control points for the curve
-    final startY = height * yPosition;
-    final endY = startY;
-    
-    // Calculate horizontal offset based on animation progress
-    final maxOffset = width * 0.4; // 40% of screen width for more noticeable movement
-    final xOffset = isReversed
+    final startY = height * config.yPosition;
+    final maxOffset = width * 0.4;
+    final xOffset = config.direction == WaveDirection.rightToLeft
         ? (1 - progress) * maxOffset
         : progress * maxOffset;
     
-    // Create a simple curved path
     path.moveTo(0, height);
     path.lineTo(0, startY);
+
+    // Create wave pattern
+    var x = 0.0;
+    while (x < width + wavelength) {
+      path.quadraticBezierTo(
+        x + wavelength / 4 + xOffset,
+        startY + waveHeight,
+        x + wavelength / 2 + xOffset,
+        startY,
+      );
+      path.quadraticBezierTo(
+        x + wavelength * 3 / 4 + xOffset,
+        startY - waveHeight,
+        x + wavelength + xOffset,
+        startY,
+      );
+      x += wavelength;
+    }
     
-    // First curve
-    path.quadraticBezierTo(
-      width * 0.2 + xOffset,
-      startY + waveHeight,
-      width * 0.5 + xOffset,
-      startY,
-    );
-    
-    // Second curve
-    path.quadraticBezierTo(
-      width * 0.8 + xOffset,
-      startY - waveHeight,
-      width,
-      endY,
-    );
-    
-    // Complete the path
     path.lineTo(width, height);
     path.close();
 
@@ -130,5 +149,6 @@ class WavePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(WavePainter oldDelegate) =>
-      progress != oldDelegate.progress;
+      progress != oldDelegate.progress ||
+      config != oldDelegate.config;
 }

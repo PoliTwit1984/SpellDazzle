@@ -9,13 +9,13 @@ class LayoutConstants {
   static const double letterTileSpacing = 8.0;
   
   // Letter tray
-  static const double trayLetterSize = 50.0;
-  static const double trayLetterPadding = 6.0;
+  static const double trayLetterSize = 45.0;
+  static const double trayLetterPadding = 4.0;
   static const double trayLetterSpacing = 8.0;
-  static const double trayLetterTextSize = 24.0;
+  static const double trayLetterTextSize = 22.0;
   
   // Bottom panel
-  static const double letterTrayHeight = 80.0;
+  static const double letterTrayHeight = 70.0;
   static const double buttonHeight = 48.0;
   static const double buttonSpacing = 16.0;
   static const double panelPadding = 16.0;

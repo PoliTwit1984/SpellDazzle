@@ -85,8 +85,8 @@ class GameManager {
   }
 
   int _getRandomTargetCount() {
-    return GameConstants.minSpawnedLetters + 
-           random.nextInt(GameConstants.maxSpawnedLetters - GameConstants.minSpawnedLetters + 1);
+    // Return random number between 8-12
+    return 8 + random.nextInt(5);
   }
 
   void startGame() {
@@ -193,6 +193,14 @@ class GameManager {
   }
 
   void onLetterCollected() {
+    _handleLetterRemoval();
+  }
+
+  void onLetterExpired() {
+    _handleLetterRemoval();
+  }
+
+  void _handleLetterRemoval() {
     _currentLetterCount--;
     
     // Update target count randomly
@@ -201,8 +209,11 @@ class GameManager {
     // Spawn new letters if needed
     final lettersNeeded = _targetLetterCount - _currentLetterCount;
     if (lettersNeeded > 0) {
-      spawnLetter();
-      _currentLetterCount++;
+      // Add slight delay before spawning new letter
+      Future.delayed(const Duration(milliseconds: 300), () {
+        spawnLetter();
+        _currentLetterCount++;
+      });
     }
   }
 

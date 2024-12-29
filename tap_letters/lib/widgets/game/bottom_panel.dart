@@ -57,7 +57,11 @@ class _BottomPanelState extends State<BottomPanel> {
   }
 
   double _getLetterSpacing() {
-    return widget.letters.length >= 7 ? 4.0 : 6.0;
+    // Calculate spacing to fit letters evenly
+    final availableWidth = MediaQuery.of(context).size.width - 24; // Full width minus padding
+    final totalLetterWidth = LayoutConstants.trayLetterSize * widget.letters.length;
+    final remainingSpace = availableWidth - totalLetterWidth;
+    return remainingSpace / (widget.letters.length + 1); // Distribute space evenly between letters
   }
 
   @override
@@ -73,7 +77,7 @@ class _BottomPanelState extends State<BottomPanel> {
           // Letter tray
           Container(
             height: LayoutConstants.letterTrayHeight,
-            margin: const EdgeInsets.only(bottom: 64),
+            margin: const EdgeInsets.only(bottom: 72),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: BackdropFilter(
@@ -87,27 +91,34 @@ class _BottomPanelState extends State<BottomPanel> {
                       width: 1,
                     ),
                   ),
-                  child: ReorderableListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: letterSpacing * 2),
-                    onReorder: widget.onReorder,
-                    proxyDecorator: (child, index, animation) {
-                      return Material(
-                        color: Colors.transparent,
-                        child: child,
-                      );
-                    },
-                    children: [
-                      for (int i = 0; i < widget.letters.length; i++)
-                        Padding(
-                          key: ValueKey(i),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: letterSpacing,
-                            vertical: (LayoutConstants.letterTrayHeight - LayoutConstants.trayLetterSize) / 2,
-                          ),
-                          child: GestureDetector(
-                            onTap: () => widget.onLetterRemoved(i),
-                            child: Container(
+                  child: Center(
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width - 24,
+                      child: ReorderableListView(
+                        scrollDirection: Axis.horizontal,
+                        buildDefaultDragHandles: false,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: (MediaQuery.of(context).size.width - 24 - 
+                            (LayoutConstants.trayLetterSize * widget.letters.length) -
+                            (16 * (widget.letters.length - 1))) / 2
+                        ),
+                        onReorder: widget.onReorder,
+                        proxyDecorator: (child, index, animation) {
+                          return Material(
+                            color: Colors.transparent,
+                            child: child,
+                          );
+                        },
+                        children: List.generate(widget.letters.length, (i) => 
+                          Container(
+                            key: ValueKey(i),
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: (LayoutConstants.letterTrayHeight - LayoutConstants.trayLetterSize) / 2,
+                            ),
+                            child: GestureDetector(
+                              onTap: () => widget.onLetterRemoved(i),
+                              child: Container(
                               width: LayoutConstants.trayLetterSize,
                               height: LayoutConstants.trayLetterSize,
                               padding: EdgeInsets.all(LayoutConstants.trayLetterPadding),
@@ -132,10 +143,12 @@ class _BottomPanelState extends State<BottomPanel> {
                                   ),
                                 ),
                               ),
+                              ),
                             ),
                           ),
                         ),
-                    ],
+                      ),
+                    ),
                   ),
                 ),
               ),

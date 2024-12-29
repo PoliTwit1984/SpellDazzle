@@ -99,7 +99,7 @@ class _LetterTileState extends State<LetterTile> with TickerProviderStateMixin {
                   onTap: widget.onTap,
                   child: TweenAnimationBuilder<double>(
                     tween: Tween(begin: 1.0, end: 0.0),
-                    duration: Duration(seconds: GameConstants.letterLifetimeSeconds.toInt()),
+                    duration: Duration(seconds: GameConstants.maxLetterLifetimeSeconds),
                     builder: (context, value, child) {
                       return Stack(
                         alignment: Alignment.center,

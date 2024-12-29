@@ -75,13 +75,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       onTimeChanged: _gameState.updateTimeLeft,
       onLetterSpawned: (letter, position) {
         // Create animated letter with this widget as vsync provider
-        final animatedLetter = AnimatedLetter(
+        late final AnimatedLetter newLetter;
+        newLetter = AnimatedLetter(
           letter: letter,
           initialPosition: position,
           vsync: this,
+          onExpire: () {
+            setState(() {
+              _letters.remove(newLetter);
+              _gameManager.onLetterExpired(); // Notify manager to spawn new letter
+            });
+          },
         );
         setState(() {
-          _letters.add(animatedLetter);
+          _letters.add(newLetter);
         });
       },
       onGameOver: () {
@@ -139,6 +146,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         letter.dispose();
       }
       _letters.clear();
+      // Clear letter tray
+      _gameState.clearCollectedLetters();
     });
     
     // Start next round after a short delay
@@ -312,8 +321,16 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
           child: Stack(
             children: [
               // Background waves
-              const Positioned.fill(
-                child: WaveBackground(),
+              Positioned.fill(
+                child: ValueListenableBuilder<int>(
+                  valueListenable: _gameState.level,
+                  builder: (context, level, _) {
+                    return WaveBackground(
+                      key: ValueKey('wave_background_$level'),
+                      roundNumber: level,
+                    );
+                  },
+                ),
               ),
               // Game layout
               Column(

@@ -1,20 +1,22 @@
 class GameConstants {
   // Game rules
   static const int minWordLength = 3;
-  static const int maxCollectedLetters = 8;
+  static const int maxCollectedLetters = 6;
   static const int roundTimeSeconds = 30;
   
   // Letter spawning
-  static const int minSpawnedLetters = 4;
-  static const int maxSpawnedLetters = 8;
-  static const int spawnIntervalMs = 2000;
+  static const int minSpawnedLetters = 8;
+  static const int maxSpawnedLetters = 12;
+  static const int spawnIntervalMs = 1000;
   static const double letterSize = 60.0;
   
   // Letter movement
-  static const double minLetterSpeed = 0.5; // Pixels per frame
-  static const double maxLetterSpeed = 1.5; // Pixels per frame
-  static const int minLetterLifetimeSeconds = 10;
-  static const int maxLetterLifetimeSeconds = 20;
+  static const double minLetterSpeed = 0.047; // Pixels per frame (2.8 pixels/second)
+  static const double maxLetterSpeed = 0.14; // Pixels per frame (8.4 pixels/second)
+  static const int minLetterLifetimeSeconds = 3;
+  static const int maxLetterLifetimeSeconds = 6;
+  static const double wobbleFrequency = 2.0; // Wobbles per second
+  static const double wobbleAmplitude = 10.0; // Pixels
   
   // Letter pool with weights (Scrabble-like distribution)
   static const Map<String, int> letterPool = {
