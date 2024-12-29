@@ -11,6 +11,7 @@ import '../widgets/game/game_area.dart';
 import '../widgets/game/game_header.dart';
 import '../widgets/game/wave_background.dart';
 import '../widgets/animations/reward_animations.dart';
+import '../widgets/animations/points_pop_animation.dart';
 import '../widgets/overlays/game_over_overlay.dart';
 import '../widgets/overlays/round_summary_overlay.dart';
 import '../constants/theme_constants.dart';
@@ -73,13 +74,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       },
       onLevelChanged: _gameState.updateLevel,
       onTimeChanged: _gameState.updateTimeLeft,
-      onLetterSpawned: (letter, position) {
+      onLetterSpawned: (String letter, Offset position, bool isBonus) {
         // Create animated letter with this widget as vsync provider
         late final AnimatedLetter newLetter;
         newLetter = AnimatedLetter(
           letter: letter,
           initialPosition: position,
           vsync: this,
+          isBonus: isBonus,
           onExpire: () {
             setState(() {
               _letters.remove(newLetter);
@@ -168,31 +170,6 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
-  void _showScoreBreakdown(String word, int points) {
-    final breakdown = ScoringEngine.getScoreBreakdown(word);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Word: $word',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(breakdown),
-          ],
-        ),
-        backgroundColor: ThemeConstants.accentColor,
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
   Future<void> _onSubmitWord() async {
     if (_isSubmitting) return;
     if (_gameState.collectedLetters.value.isEmpty) {
@@ -212,29 +189,54 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       final word = _gameState.collectedLetters.value.join().toUpperCase();
       final success = await _gameManager.submitWord();
       if (success) {
-        // Show score breakdown
-        _showScoreBreakdown(word, _lastPoints);
+        final word = _gameState.collectedLetters.value.join().toUpperCase();
+        final breakdown = ScoringEngine.getScoreBreakdown(
+          word,
+          bonusLetters: _gameState.bonusLetters.value,
+        );
         
-        // Calculate animation position from header score
-        final RenderBox? box = _scoreKey.currentContext?.findRenderObject() as RenderBox?;
-        if (box != null) {
-          final position = box.localToGlobal(
-            Offset(box.size.width / 2, box.size.height / 2)
-          );
-          setState(() {
-            _lastWordPosition = position;
-            _showScoreAnimation = true;
-          });
-        }
-
-        // Reset animation flag after animation completes
-        Future.delayed(const Duration(milliseconds: 1200), () {
-          if (mounted) {
-            setState(() {
-              _showScoreAnimation = false;
-            });
-          }
-        });
+        // Show points pop animation
+        late final OverlayEntry overlay;
+        overlay = OverlayEntry(
+          builder: (context) => Positioned(
+            left: 0,
+            right: 0,
+            bottom: LayoutConstants.bottomPanelHeight + 20,
+            child: Center(
+              child: PointsPopAnimation(
+                word: word,
+                points: _lastPoints,
+                breakdown: breakdown,
+                onComplete: () {
+                  overlay.remove();
+                  
+                  // Show confetti after points animation
+                  final RenderBox? box = _scoreKey.currentContext?.findRenderObject() as RenderBox?;
+                  if (box != null) {
+                    final position = box.localToGlobal(
+                      Offset(box.size.width / 2, box.size.height / 2)
+                    );
+                    setState(() {
+                      _lastWordPosition = position;
+                      _showScoreAnimation = true;
+                    });
+                    
+                    // Hide confetti after animation
+                    Future.delayed(const Duration(milliseconds: 1200), () {
+                      if (mounted) {
+                        setState(() {
+                          _showScoreAnimation = false;
+                        });
+                      }
+                    });
+                  }
+                },
+              ),
+            ),
+          ),
+        );
+        
+        Overlay.of(context).insert(overlay);
       } else {
         _showError('Invalid word');
       }
@@ -255,8 +257,8 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       return;
     }
     
-    // Add letter to tray
-    _gameState.addCollectedLetter(letter.letter);
+    // Add letter to tray with bonus status
+    _gameState.addCollectedLetter(letter.letter, isBonus: letter.isBonus);
     
     // Start despawn animation
     letter.startDespawnAnimation();
@@ -368,12 +370,18 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
                   ValueListenableBuilder<List<String>>(
                     valueListenable: _gameState.collectedLetters,
                     builder: (context, letters, _) {
-                      return BottomPanel(
-                        letters: letters,
-                        onClear: _gameState.clearCollectedLetters,
-                        onReorder: _gameState.reorderCollectedLetters,
-                        onLetterRemoved: _gameState.removeCollectedLetter,
-                        onSubmit: _onSubmitWord,
+                      return ValueListenableBuilder<List<bool>>(
+                        valueListenable: _gameState.bonusLetters,
+                        builder: (context, bonuses, _) {
+                          return BottomPanel(
+                            letters: letters,
+                            bonusLetters: bonuses,
+                            onClear: _gameState.clearCollectedLetters,
+                            onReorder: _gameState.reorderCollectedLetters,
+                            onLetterRemoved: _gameState.removeCollectedLetter,
+                            onSubmit: _onSubmitWord,
+                          );
+                        },
                       );
                     },
                   ),

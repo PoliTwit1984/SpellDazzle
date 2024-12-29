@@ -10,11 +10,12 @@ SpellDazzle challenges players to create words from floating letters in a visual
 
 ### Core Components
 
-- **GameManager**: Central controller handling game state, letter spawning, and round transitions
-- **GameState**: Observable state management using ValueNotifier
-- **AnimatedLetter**: Custom widget for letter movement and animations
+- **GameManager**: Central controller handling game state, letter spawning (including bonus letters), and round transitions
+- **GameState**: Observable state management using ValueNotifier for scores, letters, and bonus states
+- **AnimatedLetter**: Custom widget for letter movement and animations with bonus visual effects
 - **DictionaryService**: Word validation using a pre-loaded dictionary
-- **ScoringEngine**: Point calculation based on word length and letter values
+- **ScoringEngine**: Point calculation based on word length, letter values, and bonus multipliers
+- **BackgroundEngine**: Dynamic wave generation with parallax effects and depth-based glow
 
 ### Key Features
 
@@ -22,18 +23,23 @@ SpellDazzle challenges players to create words from floating letters in a visual
    - Dynamic letter spawning with weighted distribution
    - Smooth floating animations with collision detection
    - Responsive touch controls for letter collection
+   - Special bonus letters with visual effects (10% spawn rate)
 
 2. **Game Mechanics**
    - Round-based gameplay with increasing difficulty
    - Minimum 3-letter word requirement
    - Scrabble-style letter point values
    - Word length multipliers for scoring
+   - Bonus letters worth 3x points with glowing effects
+   - Visual feedback for bonus letter collection
 
 3. **UI/UX**
-   - Minimalist design with subtle wave background
-   - Frosted glass effects for UI elements
-   - Responsive layout supporting various screen sizes
+   - Dynamic wave background with parallax movement
+   - Multi-layered glow effects with depth-based intensity
+   - Frosted glass overlays with animated gradients
    - Smooth transitions and reward animations
+   - Responsive layout supporting various screen sizes
+   - Distinctive red glow for bonus letters
 
 ## Setup & Development
 
@@ -61,11 +67,11 @@ lib/
 ├── constants/        # Game configuration and theme constants
 ├── models/          # Data models and state management
 ├── screens/         # Main game screens
-├── services/        # Dictionary and scoring services
+├── services/        # Core services (dictionary, scoring, background)
 ├── widgets/         # UI components
 │   ├── animations/  # Custom animation widgets
 │   ├── game/       # Core game UI elements
-│   └── overlays/   # Overlay screens (game over, round summary)
+│   └── overlays/   # Overlay screens with frosted effects
 └── managers/        # Game logic and state management
 ```
 
@@ -75,6 +81,9 @@ lib/
 - Dictionary loaded asynchronously at startup
 - Efficient collision detection using spatial partitioning
 - Memory management through proper widget disposal
+- Smart opacity handling with pre-calculated values
+- Optimized wave rendering with depth-based effects
+- Efficient bonus letter glow effects
 
 ## Testing
 

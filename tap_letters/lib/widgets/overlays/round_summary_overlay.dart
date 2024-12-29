@@ -103,7 +103,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
           : 1.0;
 
         final glowOpacity = isRoundScore
-          ? 0.5 + (math.sin(_controller.value * math.pi * 4) * 0.3)
+          ? (0.5 + (math.sin(_controller.value * math.pi * 4) * 0.3)).clamp(0.0, 1.0)
           : 0.0;
 
         final containerScale = isRoundScore
@@ -119,10 +119,10 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(isRoundScore ? 0.2 : 0.1),
+                  color: const Color(0x33FFFFFF), // Fixed 0.2 opacity white
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
+                    color: const Color(0x33FFFFFF), // Fixed 0.2 opacity white
                     width: 1,
                   ),
                   boxShadow: [
@@ -174,7 +174,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: isRoundScore ? BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
+                          color: const Color(0x1AFFFFFF), // Fixed 0.1 opacity white
                           borderRadius: BorderRadius.circular(8),
                           boxShadow: [
                             BoxShadow(
@@ -301,7 +301,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
           : 0.0;
         
         // Dynamic glow effect
-        final glowOpacity = 0.3 + (inverseProgress * 0.5) + (fastPulse * 0.2);
+        final glowOpacity = (0.3 + (inverseProgress * 0.5) + (fastPulse * 0.2)).clamp(0.0, 1.0);
         
         // Smooth color transition
         final Color color;
@@ -325,22 +325,22 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                  color: color.withOpacity(isUrgent ? 0.9 : (isWarning ? 0.8 : 0.7)),
-                  width: isUrgent ? 5 : (isWarning ? 4 : 3),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withOpacity(glowOpacity),
-                    blurRadius: isUrgent ? 30 : (isWarning ? 20 : 15),
-                    spreadRadius: isUrgent ? 10 : (isWarning ? 7 : 5),
+                    color: color.withOpacity((isUrgent ? 0.9 : (isWarning ? 0.8 : 0.7)).clamp(0.0, 1.0)),
+                    width: isUrgent ? 5 : (isWarning ? 4 : 3),
                   ),
-                  if (isUrgent || isWarning)
+                  boxShadow: [
                     BoxShadow(
-                      color: ThemeConstants.dangerColor.withOpacity(glowOpacity * 0.5),
-                      blurRadius: isUrgent ? 25 : 15,
-                      spreadRadius: isUrgent ? 12 : 8,
+                      color: color.withOpacity(glowOpacity),
+                      blurRadius: isUrgent ? 30 : (isWarning ? 20 : 15),
+                      spreadRadius: isUrgent ? 10 : (isWarning ? 7 : 5),
                     ),
-                ],
+                    if (isUrgent || isWarning)
+                      BoxShadow(
+                        color: ThemeConstants.dangerColor.withOpacity(glowOpacity * 0.5),
+                        blurRadius: isUrgent ? 25 : 15,
+                        spreadRadius: isUrgent ? 12 : 8,
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -348,37 +348,37 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
               value: _countdownAnimation.value,
               strokeWidth: isUrgent ? 6 : (isWarning ? 5 : 4),
               valueColor: AlwaysStoppedAnimation<Color>(
-                color.withOpacity(0.8 + (fastPulse * 0.2)),
+                color.withOpacity((0.8 + (fastPulse * 0.2)).clamp(0.0, 1.0)),
               ),
             ),
-              Transform.translate(
-                offset: Offset(shakeX, shakeY),
-                child: Transform.scale(
-                  scale: isUrgent ? 1.3 : (isWarning ? 1.2 : 1.0),
-                  child: _buildPulsingText(
-                    _countdown.toString(),
-                    ThemeConstants.headerTextStyle.copyWith(
-                      fontSize: 36 + (inverseProgress * 24), // 36 to 60
-                      color: color,
-                      letterSpacing: 1.0 + (inverseProgress * 3.0), // 1.0 to 4.0
-                      fontWeight: isUrgent ? FontWeight.w900 : (isWarning ? FontWeight.w800 : FontWeight.w700),
-                      shadows: [
+            Transform.translate(
+              offset: Offset(shakeX, shakeY),
+              child: Transform.scale(
+                scale: isUrgent ? 1.3 : (isWarning ? 1.2 : 1.0),
+                child: _buildPulsingText(
+                  _countdown.toString(),
+                  ThemeConstants.headerTextStyle.copyWith(
+                    fontSize: 36 + (inverseProgress * 24), // 36 to 60
+                    color: color,
+                    letterSpacing: 1.0 + (inverseProgress * 3.0), // 1.0 to 4.0
+                    fontWeight: isUrgent ? FontWeight.w900 : (isWarning ? FontWeight.w800 : FontWeight.w700),
+                    shadows: [
+                      Shadow(
+                        color: color.withOpacity(0.8),
+                        blurRadius: 10 + (inverseProgress * 20),
+                        offset: const Offset(0, 2),
+                      ),
+                      if (isWarning || isUrgent)
                         Shadow(
-                          color: color.withOpacity(0.8),
-                          blurRadius: 10 + (inverseProgress * 20),
-                          offset: const Offset(0, 2),
+                          color: ThemeConstants.dangerColor.withOpacity(glowOpacity * 0.5),
+                          blurRadius: 20,
+                          offset: const Offset(0, 0),
                         ),
-                        if (isWarning || isUrgent)
-                          Shadow(
-                            color: ThemeConstants.dangerColor.withOpacity(glowOpacity * 0.5),
-                            blurRadius: 20,
-                            offset: const Offset(0, 0),
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
               ),
+            ),
           ],
         );
       },
@@ -393,7 +393,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withOpacity(0.4),
+            const Color(0x66000000), // Fixed 0.4 opacity black
             ThemeConstants.letterColors[0].withOpacity(0.2),
             ThemeConstants.letterColors[2].withOpacity(0.1),
           ],
@@ -419,15 +419,15 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.2),
-                          Colors.white.withOpacity(0.05),
-                          Colors.white.withOpacity(0.02),
+                          const Color(0x33FFFFFF), // Fixed 0.2 opacity white
+                          const Color(0x0DFFFFFF), // Fixed 0.05 opacity white
+                          const Color(0x05FFFFFF), // Fixed 0.02 opacity white
                         ],
                         stops: const [0.0, 0.6, 1.0],
                       ),
                       borderRadius: BorderRadius.circular(32.0),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
+                        color: const Color(0x33FFFFFF), // Fixed 0.2 opacity white
                         width: 2,
                       ),
                       boxShadow: [
@@ -442,7 +442,7 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                           spreadRadius: 5,
                         ),
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
+                          color: const Color(0x80000000), // Fixed 0.5 opacity black
                           blurRadius: 25,
                           spreadRadius: -10,
                         ),

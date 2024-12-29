@@ -9,6 +9,8 @@ class LetterStyle {
   final Color color;
   final double rotation;
   final double shadowIntensity;
+  final bool isBonus;
+  final Color glowColor;
 
   const LetterStyle({
     required this.size,
@@ -16,9 +18,11 @@ class LetterStyle {
     required this.color,
     required this.rotation,
     required this.shadowIntensity,
+    this.isBonus = false,
+    this.glowColor = const Color(0xFFFF0000),
   });
 
-  factory LetterStyle.random() {
+  factory LetterStyle.random({bool isBonus = false}) {
     final random = Random();
     
     // Size variation: ±15%
@@ -56,6 +60,7 @@ class LetterStyle {
       color: variedColor,
       rotation: rotationVariation,
       shadowIntensity: shadowVariation,
+      isBonus: isBonus,
     );
   }
 }
@@ -67,6 +72,7 @@ class SpawnedLetter {
   final double lifetimeSeconds;
   Offset velocity;
   final LetterStyle style;
+  final bool isBonus;
   
   // Movement constants
   static const double bounceEnergy = 0.95; // Higher energy retention for smoother movement
@@ -84,11 +90,13 @@ class SpawnedLetter {
     Offset? velocity,
     double? lifetimeSeconds,
     LetterStyle? style,
+    bool? isBonus,
   }) : 
+    isBonus = isBonus ?? false,
     spawnTime = spawnTime ?? DateTime.now(),
     velocity = velocity ?? _generateRandomVelocity(),
     lifetimeSeconds = lifetimeSeconds ?? _getNextLifetime(),
-    style = style ?? LetterStyle.random();
+    style = style ?? LetterStyle.random(isBonus: isBonus ?? false);
 
   static Offset _generateRandomVelocity() {
     final random = Random();
@@ -202,6 +210,7 @@ class SpawnedLetter {
     Offset? velocity,
     double? lifetimeSeconds,
     LetterStyle? style,
+    bool? isBonus,
   }) {
     return SpawnedLetter(
       letter: letter ?? this.letter,
@@ -210,6 +219,7 @@ class SpawnedLetter {
       velocity: velocity ?? this.velocity,
       lifetimeSeconds: lifetimeSeconds ?? this.lifetimeSeconds,
       style: style ?? this.style,
+      isBonus: isBonus ?? this.isBonus,
     );
   }
 

@@ -7,6 +7,7 @@ import '../../constants/game_constants.dart';
 
 class BottomPanel extends StatefulWidget {
   final List<String> letters;
+  final List<bool> bonusLetters;
   final VoidCallback onClear;
   final Function(int, int) onReorder;
   final Function(int) onLetterRemoved;
@@ -15,6 +16,7 @@ class BottomPanel extends StatefulWidget {
   const BottomPanel({
     super.key,
     required this.letters,
+    this.bonusLetters = const [],
     required this.onClear,
     required this.onReorder,
     required this.onLetterRemoved,
@@ -126,6 +128,12 @@ class _BottomPanelState extends State<BottomPanel> {
                                 color: ThemeConstants.primaryColor,
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
+                                  if (i < widget.bonusLetters.length && widget.bonusLetters[i])
+                                    const BoxShadow(
+                                      color: Color(0xFFFF0000),
+                                      blurRadius: 12,
+                                      spreadRadius: 4,
+                                    ),
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.15),
                                     blurRadius: 3,

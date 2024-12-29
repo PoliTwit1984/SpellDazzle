@@ -40,6 +40,12 @@ class LetterTile extends StatelessWidget {
               width: 1,
             ),
             boxShadow: [
+              if (letter.isBonus)
+                BoxShadow(
+                  color: const Color(0xFFFF0000).withOpacity(0.4),
+                  blurRadius: 12,
+                  spreadRadius: 4,
+                ),
               BoxShadow(
                 color: style.color.withOpacity(style.shadowIntensity * 0.5),
                 blurRadius: 8 + (style.shadowIntensity * 8),

@@ -15,6 +15,8 @@ class AnimatedLetter {
   final double cornerRadius;
   final double shadowIntensity;
   final double sizeVariation;
+  final bool isBonus;
+  final Color glowColor;
   
   // Position update timer
   Timer? _positionTimer;
@@ -47,7 +49,9 @@ class AnimatedLetter {
     required Offset initialPosition,
     required this.vsync,
     required this.onExpire,
+    this.isBonus = false,
   }) : baseColor = ThemeConstants.letterColors[Random().nextInt(ThemeConstants.letterColors.length)],
+       glowColor = const Color(0xFFFF0000),
        cornerRadius = ThemeConstants.minCornerRadius + 
                      (Random().nextDouble() * (ThemeConstants.maxCornerRadius - ThemeConstants.minCornerRadius)),
        shadowIntensity = ThemeConstants.minShadowIntensity + 

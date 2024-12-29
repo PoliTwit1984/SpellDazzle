@@ -40,7 +40,7 @@ class GameManager {
   final Function(int) onScoreChanged;
   final Function(int) onLevelChanged;
   final Function(int) onTimeChanged;
-  final Function(String, Offset) onLetterSpawned;
+  final void Function(String, Offset, bool) onLetterSpawned;
   final VoidCallback? onGameOver;
   final Function(int, String, int, int)? onRoundComplete;
   
@@ -179,7 +179,9 @@ class GameManager {
     
     final letter = _getRandomWeightedLetter();
     final position = _getRandomPosition();
-    onLetterSpawned(letter, position);
+    // 10% chance for bonus letter
+    final isBonus = random.nextDouble() < 0.10;
+    onLetterSpawned(letter, position, isBonus);
   }
 
   String _getRandomWeightedLetter() {
@@ -219,6 +221,7 @@ class GameManager {
 
   Future<bool> submitWord() async {
     final letters = gameState.collectedLetters.value;
+    final bonuses = gameState.bonusLetters.value;
     if (letters.isEmpty) return false;
     
     final word = letters.join().toUpperCase();
@@ -231,8 +234,8 @@ class GameManager {
       return false;
     }
 
-    // Calculate score using scoring engine
-    final points = ScoringEngine.calculateWordScore(word);
+    // Calculate score using scoring engine with bonus letters
+    final points = ScoringEngine.calculateWordScore(word, bonusLetters: bonuses);
     score += points;
     roundScore += points;
     

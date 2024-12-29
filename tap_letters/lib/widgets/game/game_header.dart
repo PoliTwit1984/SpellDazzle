@@ -22,16 +22,21 @@ class GameHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: LayoutConstants.headerHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Level
           AnimatedLevelDisplay(level: level),
-          // Score
-          AnimatedScore(
-            score: score,
-            scoreKey: scoreKey,
+          // Score (with flexible width)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: AnimatedScore(
+                score: score,
+                scoreKey: scoreKey,
+              ),
+            ),
           ),
           // Timer
           AnimatedGameTimer(timeLeft: timeLeft),
@@ -107,9 +112,6 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
         final shakeX = math.sin(_controller.value * math.pi * 12) * shakeIntensity;
         final shakeY = math.cos(_controller.value * math.pi * 8) * shakeIntensity * 0.5;
         
-        // Glow effect that fades out
-        final glowOpacity = (0.8 * intensity * (1.0 - _controller.value)) + 0.2;
-        
         // Base colors
         final baseColor = ThemeConstants.accentColor;
         final white = Colors.white;
@@ -118,10 +120,9 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
         final lerpValue = (fastPulse * 0.5 + 0.5).clamp(0.0, 1.0);
         final glowColor = Color.lerp(baseColor, white, lerpValue) ?? baseColor;
         
-        // Calculate opacities after color interpolation
-        final glowOpacityValue = (glowOpacity * 0.5).clamp(0.0, 1.0);
-        final borderOpacityValue = 0.3;
-        final backgroundOpacityValue = 0.2;
+        // Calculate glow opacity that fades out
+        final fadeProgress = (1.0 - _controller.value).clamp(0.0, 1.0);
+        final glowOpacity = (0.8 * intensity * fadeProgress + 0.2).clamp(0.0, 1.0);
 
         return Transform.translate(
           offset: Offset(shakeX, shakeY),
@@ -130,19 +131,19 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
             child: Container(
               key: widget.scoreKey,
               padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
+                horizontal: 12.0,
                 vertical: 8.0,
               ),
               decoration: BoxDecoration(
-                color: baseColor.withOpacity(0.2),
+                color: const Color(0x33FFFFFF), // Fixed 0.2 opacity white
                 borderRadius: BorderRadius.circular(16.0),
                 border: Border.all(
-                  color: glowColor.withOpacity(0.3),
+                  color: const Color(0x4DFFFFFF), // Fixed 0.3 opacity white
                   width: 1 + (intensity * 1),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: glowColor.withOpacity(0.5),
+                    color: glowColor.withOpacity(0.3),
                     blurRadius: 10 + (intensity * 10),
                     spreadRadius: 2 + (intensity * 3),
                   ),
@@ -170,13 +171,13 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
                     letterSpacing: 1.0 + (intensity * 1.0),
                     shadows: [
                       Shadow(
-                        color: glowColor.withOpacity(glowOpacity * 0.7),
+                        color: const Color(0xB3FFFFFF), // Fixed 0.7 opacity white
                         blurRadius: 8 + (intensity * 8),
                         offset: const Offset(0, 2),
                       ),
                       if (intensity > 0.3)
                         Shadow(
-                          color: Colors.white.withOpacity(glowOpacity * 0.5),
+                          color: const Color(0x80FFFFFF), // Fixed 0.5 opacity white
                           blurRadius: 12,
                           offset: const Offset(0, 0),
                         ),
@@ -252,7 +253,7 @@ class _AnimatedGameTimerState extends State<AnimatedGameTimer> with SingleTicker
           : 0.0;
         
         // Dynamic glow effect
-        final glowOpacity = 0.2 + (inverseProgress * 0.3) + (fastPulse * 0.1);
+        final glowOpacity = (0.2 + (inverseProgress * 0.3) + (fastPulse * 0.1)).clamp(0.0, 1.0);
         
         // Smooth color transition
         final Color color;
@@ -272,19 +273,19 @@ class _AnimatedGameTimerState extends State<AnimatedGameTimer> with SingleTicker
             scale: pulseScale,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
+                horizontal: 12.0,
                 vertical: 8.0,
               ),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                color: const Color(0x33FFFFFF), // Fixed 0.2 opacity white
                 borderRadius: BorderRadius.circular(16.0),
                 border: Border.all(
-                  color: color.withOpacity(0.3),
+                  color: const Color(0x4DFFFFFF), // Fixed 0.3 opacity white
                   width: isUrgent ? 2 : 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(glowOpacity),
+                    color: color.withOpacity(0.3),
                     blurRadius: isUrgent ? 15 : (isWarning ? 10 : 5),
                     spreadRadius: isUrgent ? 2 : 1,
                   ),
@@ -294,18 +295,18 @@ class _AnimatedGameTimerState extends State<AnimatedGameTimer> with SingleTicker
                 '$timeLeft',
                 style: ThemeConstants.headerTextStyle.copyWith(
                   color: color,
-                  fontSize: isUrgent ? 28 : (isWarning ? 24 : 20),
+                  fontSize: isUrgent ? 24 : (isWarning ? 22 : 20),
                   fontWeight: isUrgent ? FontWeight.w900 : (isWarning ? FontWeight.w800 : FontWeight.w700),
-                  letterSpacing: isUrgent ? 2.0 : (isWarning ? 1.5 : 1.0),
+                  letterSpacing: isUrgent ? 1.5 : (isWarning ? 1.0 : 0.5),
                   shadows: [
                     Shadow(
-                      color: color.withOpacity(0.5),
+                      color: const Color(0x80FFFFFF), // Fixed 0.5 opacity white
                       blurRadius: isUrgent ? 10 : (isWarning ? 8 : 6),
                       offset: const Offset(0, 2),
                     ),
                     if (isUrgent || isWarning)
                       Shadow(
-                        color: ThemeConstants.dangerColor.withOpacity(glowOpacity),
+                        color: const Color(0x4DFFFFFF), // Fixed 0.3 opacity white
                         blurRadius: 8,
                         offset: const Offset(0, 0),
                       ),

@@ -129,7 +129,7 @@ class _AnimatedLevelDisplayState extends State<AnimatedLevelDisplay> with Single
         final isNumber = index >= 5;
         
         return Padding(
-          padding: EdgeInsets.symmetric(horizontal: isNumber ? 2.0 : 1.0),
+          padding: EdgeInsets.symmetric(horizontal: isNumber ? 1.0 : 0.5),
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
@@ -149,7 +149,7 @@ class _AnimatedLevelDisplayState extends State<AnimatedLevelDisplay> with Single
                     child: Text(
                       text[index],
                       style: ThemeConstants.headerTextStyle.copyWith(
-                        fontSize: isNumber ? 32 : 28,
+                        fontSize: isNumber ? 24 : 20,
                         fontWeight: FontWeight.w800,
                         shadows: [
                           Shadow(
