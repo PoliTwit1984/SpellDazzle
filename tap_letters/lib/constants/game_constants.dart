@@ -11,12 +11,12 @@ class GameConstants {
   static const double letterSize = 60.0;
   
   // Letter movement
-  static const double minLetterSpeed = 0.047; // Pixels per frame (2.8 pixels/second)
-  static const double maxLetterSpeed = 0.14; // Pixels per frame (8.4 pixels/second)
+  static const double minLetterSpeed = 50.0; // Pixels per second
+  static const double maxLetterSpeed = 150.0; // Pixels per second
   static const int minLetterLifetimeSeconds = 3;
   static const int maxLetterLifetimeSeconds = 6;
   static const double wobbleFrequency = 2.0; // Wobbles per second
-  static const double wobbleAmplitude = 10.0; // Pixels
+  static const double wobbleAmplitude = 3.0; // Pixels
   
   // Letter pool with weights (Scrabble-like distribution)
   static const Map<String, int> letterPool = {

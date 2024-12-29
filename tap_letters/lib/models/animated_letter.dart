@@ -9,9 +9,10 @@ class AnimatedLetter {
   final VoidCallback onExpire;
   final Random random = Random();
   
-  // Position animation
-  late final AnimationController positionController;
+  // Position update timer
+  Timer? _positionTimer;
   late final ValueNotifier<Offset> position;
+  late final ValueNotifier<double> rotation;
   
   // Scale and opacity animations
   late final AnimationController scaleController;
@@ -31,17 +32,19 @@ class AnimatedLetter {
   late double _speedY;
   Size? _bounds;
   
+  // Rotation animation
+  double _rotationTime = 0;
+  
   AnimatedLetter({
     required this.letter,
     required Offset initialPosition,
     required this.vsync,
     required this.onExpire,
   }) {
-    // Initialize position controller for continuous movement
-    positionController = AnimationController(
-      vsync: vsync,
-      duration: const Duration(milliseconds: 16), // 60 FPS
-    );
+    // Initialize position update timer (60 FPS)
+    _positionTimer = Timer.periodic(const Duration(milliseconds: 16), (_) {
+      _updatePosition();
+    });
     
     // Initialize scale controller for despawn animation
     scaleController = AnimationController(
@@ -92,19 +95,21 @@ class AnimatedLetter {
       ),
     ]).animate(sparkleController);
     
-    // Set up position
+    // Set up position and rotation
     position = ValueNotifier(initialPosition);
+    rotation = ValueNotifier(0.0);
     
     // Initialize random movement
     _initializeMovement();
     
     // Start animations
-    positionController.addListener(_updatePosition);
-    positionController.repeat();
     sparkleController.forward();
     
-    // Set up lifetime timer (random between 3-6 seconds)
-    final lifetime = Duration(milliseconds: 3000 + random.nextInt(3000));
+    // Set up lifetime timer (random between min and max lifetime)
+    final lifetime = Duration(
+      milliseconds: GameConstants.minLetterLifetimeSeconds * 1000 +
+                   random.nextInt((GameConstants.maxLetterLifetimeSeconds - GameConstants.minLetterLifetimeSeconds) * 1000)
+    );
     _lifetimeTimer = Timer(lifetime, () {
       startDespawnAnimation();
       Timer(const Duration(milliseconds: 300), onExpire);
@@ -112,19 +117,30 @@ class AnimatedLetter {
   }
   
   void _initializeMovement() {
-    // Random speed between min and max
-    final speed = GameConstants.minLetterSpeed + 
-                 random.nextDouble() * (GameConstants.maxLetterSpeed - GameConstants.minLetterSpeed);
+    // Get random speed in pixels/frame (60 FPS)
+    final pixelsPerSecond = GameConstants.minLetterSpeed + 
+                         random.nextDouble() * (GameConstants.maxLetterSpeed - GameConstants.minLetterSpeed);
+    final speed = pixelsPerSecond / 60; // Convert to pixels per frame
     
-    // Random angle for movement direction
-    final angle = random.nextDouble() * 2 * pi;
-    _speedX = speed * cos(angle);
+    // Random angle between -30 and 30 degrees from horizontal
+    final angle = (random.nextDouble() * pi/3) - pi/6;
+    
+    // Start from either left or right edge
+    final startFromLeft = random.nextBool();
+    final direction = startFromLeft ? 1 : -1;
+    _speedX = speed * cos(angle) * direction;
     _speedY = speed * sin(angle);
+    
+    // Adjust initial position to start at edge
+    if (_bounds != null) {
+      final margin = GameConstants.letterSize / 2;
+      if (startFromLeft) {
+        position.value = Offset(margin, position.value.dy);
+      } else {
+        position.value = Offset(_bounds!.width - margin, position.value.dy);
+      }
+    }
   }
-  
-  // Track time for wobble animation
-  double _wobbleTime = 0;
-  final double _wobbleTimeIncrement = 1 / 60; // 60 FPS
 
   void _updatePosition() {
     if (_bounds == null) return;
@@ -136,27 +152,21 @@ class AnimatedLetter {
     var newX = currentPos.dx + _speedX;
     var newY = currentPos.dy + _speedY;
     
-    // Add wobble effect perpendicular to movement direction
-    final angle = atan2(_speedY, _speedX);
-    final perpAngle = angle + pi / 2;
-    final wobbleOffset = sin(_wobbleTime * GameConstants.wobbleFrequency * 2 * pi) * GameConstants.wobbleAmplitude;
-    newX += cos(perpAngle) * wobbleOffset;
-    newY += sin(perpAngle) * wobbleOffset;
-    
-    // Bounce off walls with margin
+    // Bounce off walls with margin, preserving angle
     final margin = GameConstants.letterSize / 2;
     if (newX <= margin || newX >= _bounds!.width - margin) {
-      _speedX *= -1;
+      _speedX *= -1; // Reverse horizontal direction
       newX = newX <= margin ? margin : _bounds!.width - margin;
     }
     
     if (newY <= margin || newY >= _bounds!.height - margin) {
-      _speedY *= -1;
+      _speedY *= -1; // Reverse vertical direction
       newY = newY <= margin ? margin : _bounds!.height - margin;
     }
     
-    // Update wobble time
-    _wobbleTime += _wobbleTimeIncrement;
+    // Update rotation for wobble effect
+    _rotationTime += 1/60; // 60 FPS
+    rotation.value = sin(_rotationTime * GameConstants.wobbleFrequency * 2 * pi) * 0.1; // ±0.1 radians (±5.7 degrees)
     
     // Update position
     position.value = Offset(newX, newY);
@@ -175,8 +185,9 @@ class AnimatedLetter {
         if (distance < GameConstants.letterSize * 1.2) {
           // Bounce off other letter
           final angle = atan2(dy, dx);
-          final speed = GameConstants.minLetterSpeed + 
-                       random.nextDouble() * (GameConstants.maxLetterSpeed - GameConstants.minLetterSpeed);
+          final pixelsPerSecond = GameConstants.minLetterSpeed + 
+                               random.nextDouble() * (GameConstants.maxLetterSpeed - GameConstants.minLetterSpeed);
+          final speed = pixelsPerSecond / 60; // Convert to pixels per frame
           
           _speedX = cos(angle) * speed;
           _speedY = sin(angle) * speed;
@@ -197,10 +208,11 @@ class AnimatedLetter {
   }
   
   void dispose() {
-    positionController.dispose();
+    _positionTimer?.cancel();
     scaleController.dispose();
     sparkleController.dispose();
     position.dispose();
+    rotation.dispose();
     _lifetimeTimer?.cancel();
   }
 }
