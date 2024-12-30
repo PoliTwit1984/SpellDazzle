@@ -39,7 +39,8 @@ SpellDazzle challenges players to create words from floating letters in a visual
    - Frosted glass overlays with animated gradients
    - Smooth transitions and reward animations
    - Responsive layout supporting various screen sizes
-   - Distinctive red glow for bonus letters
+   - Safe shadow rendering with non-negative blur values
+   - Optimized visual effects for consistent performance
 
 ## Setup & Development
 
@@ -83,6 +84,7 @@ lib/
 - Memory management through proper widget disposal
 - Smart opacity handling with pre-calculated values
 - Optimized wave rendering with depth-based effects
+- Safe shadow calculations with guaranteed non-negative values
 - Efficient bonus letter glow effects
 
 ## Testing

@@ -104,12 +104,12 @@ class _GameOverOverlayState extends State<GameOverOverlay> with SingleTickerProv
                 children: [
                   ShaderMask(
                     shaderCallback: (bounds) {
-                      return LinearGradient(
+                      return const LinearGradient(
                         colors: [
                           Colors.white,
                           ThemeConstants.primaryColor,
                         ],
-                        stops: const [0.0, 0.7],
+                        stops: [0.0, 0.7],
                       ).createShader(bounds);
                     },
                     child: Text(
@@ -118,10 +118,10 @@ class _GameOverOverlayState extends State<GameOverOverlay> with SingleTickerProv
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
                         shadows: [
-                          Shadow(
+                          const Shadow(
                             color: Colors.black,
                             blurRadius: 12,
-                            offset: const Offset(0, 2),
+                            offset: Offset(0, 2),
                           ),
                         ],
                       ),
@@ -130,12 +130,12 @@ class _GameOverOverlayState extends State<GameOverOverlay> with SingleTickerProv
                   const SizedBox(width: 8),
                   ShaderMask(
                     shaderCallback: (bounds) {
-                      return LinearGradient(
+                      return const LinearGradient(
                         colors: [
                           Colors.white,
                           ThemeConstants.accentColor,
                         ],
-                        stops: const [0.0, 0.7],
+                        stops: [0.0, 0.7],
                       ).createShader(bounds);
                     },
                     child: Text(
@@ -145,15 +145,15 @@ class _GameOverOverlayState extends State<GameOverOverlay> with SingleTickerProv
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.2,
                         shadows: [
-                          Shadow(
+                          const Shadow(
                             color: Colors.black,
                             blurRadius: 12,
-                            offset: const Offset(0, 2),
+                            offset: Offset(0, 2),
                           ),
-                          Shadow(
+                          const Shadow(
                             color: ThemeConstants.accentColor,
                             blurRadius: 16,
-                            offset: const Offset(0, 0),
+                            offset: Offset(0, 0),
                           ),
                         ],
                       ),
@@ -176,12 +176,12 @@ class _GameOverOverlayState extends State<GameOverOverlay> with SingleTickerProv
           scale: 1.0 + (math.sin(_controller.value * math.pi * 3) * 0.15),
           child: ShaderMask(
             shaderCallback: (bounds) {
-              return LinearGradient(
+              return const LinearGradient(
                 colors: [
                   Colors.white,
                   ThemeConstants.primaryColor,
                 ],
-                stops: const [0.0, 0.7],
+                stops: [0.0, 0.7],
               ).createShader(bounds);
             },
             child: Text(
@@ -190,10 +190,10 @@ class _GameOverOverlayState extends State<GameOverOverlay> with SingleTickerProv
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
                 shadows: [
-                  Shadow(
+                  const Shadow(
                     color: Colors.black,
                     blurRadius: 12,
-                    offset: const Offset(0, 2),
+                    offset: Offset(0, 2),
                   ),
                   Shadow(
                     color: ThemeConstants.primaryColor,

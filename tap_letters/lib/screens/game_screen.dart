@@ -35,7 +35,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   bool _showRoundSummary = false;
   Offset? _lastWordPosition;
   int _lastPoints = 0;
-  double _lastMultiplier = 1.0;
+  final double _lastMultiplier = 1.0;
   int _previousScore = 0;
   
   // Round summary data
@@ -288,7 +288,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       return Scaffold(
         backgroundColor: Colors.transparent,
         body: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: ThemeConstants.backgroundGradient,
           ),
           child: const Center(
@@ -305,7 +305,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       body: Material(
         type: MaterialType.transparency,
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: ThemeConstants.backgroundGradient,
           ),
           child: SafeArea(

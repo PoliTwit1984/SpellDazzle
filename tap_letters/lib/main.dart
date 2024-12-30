@@ -20,9 +20,8 @@ class TapLettersApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.transparent,
         canvasColor: Colors.transparent,
         dialogBackgroundColor: Colors.transparent,
-        colorScheme: ColorScheme.dark(
+        colorScheme: const ColorScheme.dark(
           primary: ThemeConstants.primaryColor,
-          background: Colors.transparent,
           surface: Colors.transparent,
           shadow: Colors.transparent,
         ),

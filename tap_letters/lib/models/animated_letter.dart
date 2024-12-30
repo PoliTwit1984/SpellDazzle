@@ -151,7 +151,7 @@ class AnimatedLetter {
     
     // Adjust initial position to start at edge
     if (_bounds != null) {
-      final margin = GameConstants.letterSize / 2;
+      const margin = GameConstants.letterSize / 2;
       if (startFromLeft) {
         position.value = Offset(margin, position.value.dy);
       } else {
@@ -171,7 +171,7 @@ class AnimatedLetter {
     var newY = currentPos.dy + _speedY;
     
     // Bounce off walls with margin, preserving angle
-    final margin = GameConstants.letterSize / 2;
+    const margin = GameConstants.letterSize / 2;
     if (newX <= margin || newX >= _bounds!.width - margin) {
       _speedX *= -1; // Reverse horizontal direction
       newX = newX <= margin ? margin : _bounds!.width - margin;

@@ -34,10 +34,10 @@ class LetterStyle {
     // Color variation - use multiple base colors
     final baseColors = [
       ThemeConstants.primaryColor,
-      Color(0xFF4CAF50), // Green
-      Color(0xFFFFA726), // Orange
-      Color(0xFF7E57C2), // Purple
-      Color(0xFF26C6DA), // Cyan
+      const Color(0xFF4CAF50), // Green
+      const Color(0xFFFFA726), // Orange
+      const Color(0xFF7E57C2), // Purple
+      const Color(0xFF26C6DA), // Cyan
     ];
     
     final baseColor = baseColors[random.nextInt(baseColors.length)];
@@ -103,7 +103,7 @@ class SpawnedLetter {
     // Generate random angle between 0 and 2π (full circle)
     final angle = random.nextDouble() * 2 * pi;
     // Generate random speed between min and max
-    final speedRange = GameConstants.maxLetterSpeed - GameConstants.minLetterSpeed;
+    const speedRange = GameConstants.maxLetterSpeed - GameConstants.minLetterSpeed;
     final speed = GameConstants.minLetterSpeed + random.nextDouble() * speedRange;
     // Convert to x,y velocity
     return Offset(cos(angle) * speed, sin(angle) * speed);
@@ -177,7 +177,7 @@ class SpawnedLetter {
         // Only resolve collision if objects are moving toward each other
         if (normalVelocity < 0) {
           // Calculate impulse
-          final restitution = bounceEnergy;
+          const restitution = bounceEnergy;
           final impulse = -(1 + restitution) * normalVelocity / 2;
           
           // Apply impulse

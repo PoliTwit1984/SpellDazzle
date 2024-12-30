@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/animated_letter.dart';
-import '../../constants/layout_constants.dart';
-import '../../constants/theme_constants.dart';
 import '../../constants/game_constants.dart';
 import 'rotating_letter_tile.dart';
 

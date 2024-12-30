@@ -145,12 +145,12 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                   children: [
                     ShaderMask(
                       shaderCallback: (bounds) {
-                        return LinearGradient(
+                        return const LinearGradient(
                           colors: [
                             Colors.white,
                             ThemeConstants.primaryColor,
                           ],
-                          stops: const [0.0, 0.7],
+                          stops: [0.0, 0.7],
                         ).createShader(bounds);
                       },
                       child: Text(
@@ -159,10 +159,10 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                           color: Colors.white,
                           fontWeight: FontWeight.w500,
                           shadows: [
-                            Shadow(
+                            const Shadow(
                               color: Colors.black,
                               blurRadius: 12,
-                              offset: const Offset(0, 2),
+                              offset: Offset(0, 2),
                             ),
                           ],
                         ),
@@ -201,10 +201,10 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                               fontWeight: isRoundScore ? FontWeight.w800 : FontWeight.w700,
                               letterSpacing: isRoundScore ? 1.2 : 1.0,
                               shadows: [
-                                Shadow(
+                                const Shadow(
                                   color: Colors.black,
                                   blurRadius: 12,
-                                  offset: const Offset(0, 2),
+                                  offset: Offset(0, 2),
                                 ),
                                 Shadow(
                                   color: isRoundScore ? ThemeConstants.accentColor : ThemeConstants.primaryColor,
@@ -235,12 +235,12 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
           scale: 1.0 + (math.sin(_controller.value * math.pi * 3) * 0.15),
           child: ShaderMask(
             shaderCallback: (bounds) {
-              return LinearGradient(
+              return const LinearGradient(
                 colors: [
                   Colors.white,
                   ThemeConstants.primaryColor,
                 ],
-                stops: const [0.0, 0.7],
+                stops: [0.0, 0.7],
               ).createShader(bounds);
             },
             child: Text(
@@ -249,10 +249,10 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                 color: Colors.white,
                 fontWeight: FontWeight.w700,
                 shadows: [
-                  Shadow(
+                  const Shadow(
                     color: Colors.black,
                     blurRadius: 12,
-                    offset: const Offset(0, 2),
+                    offset: Offset(0, 2),
                   ),
                   Shadow(
                     color: ThemeConstants.primaryColor,
@@ -415,15 +415,15 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                     margin: const EdgeInsets.all(32.0),
                     padding: const EdgeInsets.all(24.0),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          const Color(0x33FFFFFF), // Fixed 0.2 opacity white
-                          const Color(0x0DFFFFFF), // Fixed 0.05 opacity white
-                          const Color(0x05FFFFFF), // Fixed 0.02 opacity white
+                          Color(0x33FFFFFF), // Fixed 0.2 opacity white
+                          Color(0x0DFFFFFF), // Fixed 0.05 opacity white
+                          Color(0x05FFFFFF), // Fixed 0.02 opacity white
                         ],
-                        stops: const [0.0, 0.6, 1.0],
+                        stops: [0.0, 0.6, 1.0],
                       ),
                       borderRadius: BorderRadius.circular(32.0),
                       border: Border.all(
@@ -441,8 +441,8 @@ class _RoundSummaryOverlayState extends State<RoundSummaryOverlay> with SingleTi
                           blurRadius: 30,
                           spreadRadius: 5,
                         ),
-                        BoxShadow(
-                          color: const Color(0x80000000), // Fixed 0.5 opacity black
+                        const BoxShadow(
+                          color: Color(0x80000000), // Fixed 0.5 opacity black
                           blurRadius: 25,
                           spreadRadius: -10,
                         ),

@@ -157,10 +157,10 @@ class _AnimatedLevelDisplayState extends State<AnimatedLevelDisplay> with Single
                             blurRadius: 12,
                             offset: const Offset(0, 2),
                           ),
-                          Shadow(
-                            color: const Color(0x4D000000), // 0.3 opacity black
+                          const Shadow(
+                            color: Color(0x4D000000), // 0.3 opacity black
                             blurRadius: 4,
-                            offset: const Offset(0, 2),
+                            offset: Offset(0, 2),
                           ),
                         ],
                       ),

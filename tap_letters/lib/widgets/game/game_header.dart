@@ -113,8 +113,8 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
         final shakeY = math.cos(_controller.value * math.pi * 8) * shakeIntensity * 0.5;
         
         // Base colors
-        final baseColor = ThemeConstants.accentColor;
-        final white = Colors.white;
+        const baseColor = ThemeConstants.accentColor;
+        const white = Colors.white;
         
         // Calculate interpolated color
         final lerpValue = (fastPulse * 0.5 + 0.5).clamp(0.0, 1.0);
@@ -144,8 +144,8 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
                 boxShadow: [
                   BoxShadow(
                     color: glowColor.withOpacity(0.3),
-                    blurRadius: 10 + (intensity * 10),
-                    spreadRadius: 2 + (intensity * 3),
+                    blurRadius: math.max(0, 10 + (intensity * 10)),
+                    spreadRadius: math.max(0, 2 + (intensity * 3)),
                   ),
                 ],
               ),
@@ -172,13 +172,13 @@ class _AnimatedScoreState extends State<AnimatedScore> with SingleTickerProvider
                     shadows: [
                       Shadow(
                         color: const Color(0xB3FFFFFF), // Fixed 0.7 opacity white
-                        blurRadius: 8 + (intensity * 8),
+                        blurRadius: math.max(0, 8 + (intensity * 8)),
                         offset: const Offset(0, 2),
                       ),
                       if (intensity > 0.3)
                         Shadow(
                           color: const Color(0x80FFFFFF), // Fixed 0.5 opacity white
-                          blurRadius: 12,
+                          blurRadius: math.max(0, 12),
                           offset: const Offset(0, 0),
                         ),
                     ],
@@ -286,8 +286,8 @@ class _AnimatedGameTimerState extends State<AnimatedGameTimer> with SingleTicker
                 boxShadow: [
                   BoxShadow(
                     color: color.withOpacity(0.3),
-                    blurRadius: isUrgent ? 15 : (isWarning ? 10 : 5),
-                    spreadRadius: isUrgent ? 2 : 1,
+                    blurRadius: math.max(0, isUrgent ? 15 : (isWarning ? 10 : 5)),
+                    spreadRadius: math.max(0, isUrgent ? 2 : 1),
                   ),
                 ],
               ),
@@ -301,14 +301,14 @@ class _AnimatedGameTimerState extends State<AnimatedGameTimer> with SingleTicker
                   shadows: [
                     Shadow(
                       color: const Color(0x80FFFFFF), // Fixed 0.5 opacity white
-                      blurRadius: isUrgent ? 10 : (isWarning ? 8 : 6),
+                      blurRadius: math.max(0, isUrgent ? 10 : (isWarning ? 8 : 6)),
                       offset: const Offset(0, 2),
                     ),
                     if (isUrgent || isWarning)
-                      Shadow(
-                        color: const Color(0x4DFFFFFF), // Fixed 0.3 opacity white
+                      const Shadow(
+                        color: Color(0x4DFFFFFF), // Fixed 0.3 opacity white
                         blurRadius: 8,
-                        offset: const Offset(0, 0),
+                        offset: Offset(0, 0),
                       ),
                   ],
                 ),

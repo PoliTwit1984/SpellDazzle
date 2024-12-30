@@ -24,7 +24,7 @@ class LetterTile extends StatelessWidget {
         child: Container(
           width: style.size,
           height: style.size,
-          padding: EdgeInsets.all(LayoutConstants.letterTilePadding),
+          padding: const EdgeInsets.all(LayoutConstants.letterTilePadding),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,

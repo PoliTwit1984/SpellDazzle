@@ -114,7 +114,7 @@ class _BottomPanelState extends State<BottomPanel> {
                         children: List.generate(widget.letters.length, (i) => 
                           Container(
                             key: ValueKey(i),
-                            margin: EdgeInsets.symmetric(
+                            margin: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: (LayoutConstants.letterTrayHeight - LayoutConstants.trayLetterSize) / 2,
                             ),
@@ -123,7 +123,7 @@ class _BottomPanelState extends State<BottomPanel> {
                               child: Container(
                               width: LayoutConstants.trayLetterSize,
                               height: LayoutConstants.trayLetterSize,
-                              padding: EdgeInsets.all(LayoutConstants.trayLetterPadding),
+                              padding: const EdgeInsets.all(LayoutConstants.trayLetterPadding),
                               decoration: BoxDecoration(
                                 color: ThemeConstants.primaryColor,
                                 borderRadius: BorderRadius.circular(8),

@@ -69,7 +69,7 @@ class _RotatingLetterTileState extends State<RotatingLetterTile> with SingleTick
             child: Container(
               width: LayoutConstants.letterTileSize * widget.letter.sizeVariation,
               height: LayoutConstants.letterTileSize * widget.letter.sizeVariation,
-              padding: EdgeInsets.all(LayoutConstants.letterTilePadding),
+              padding: const EdgeInsets.all(LayoutConstants.letterTilePadding),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,

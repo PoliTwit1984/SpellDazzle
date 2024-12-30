@@ -48,7 +48,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
       body: Material(
         type: MaterialType.transparency,
         child: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: ThemeConstants.backgroundGradient,
           ),
           child: const Center(

@@ -167,7 +167,7 @@ class GameManager {
   Offset _getRandomPosition() {
     if (_gameAreaSize == null) return Offset.zero;
     
-    final margin = GameConstants.letterSize;
+    const margin = GameConstants.letterSize;
     return Offset(
       margin + random.nextDouble() * (_gameAreaSize!.width - margin * 2),
       margin + random.nextDouble() * (_gameAreaSize!.height - margin * 2),

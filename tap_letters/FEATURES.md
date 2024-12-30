@@ -78,6 +78,7 @@
   - Inner glow for front waves
   - Animated gradient background
   - Special red glow for bonus letters
+  - Safe blur radius calculations with non-negative values
 
 ### UI Components
 - **Letter Tiles**
@@ -88,6 +89,7 @@
   - Subtle rotation animations
   - Randomized movement patterns
   - Distinctive red glow for bonus letters
+  - Optimized shadow rendering with guaranteed non-negative blur values
 
 - **Collection Tray**
   - Frosted glass effect
@@ -95,6 +97,7 @@
   - Smooth reordering animation
   - Clear visual feedback
   - Preserved bonus letter effects
+  - Safe shadow calculations for consistent appearance
 
 - **Score Display**
   - Frosted glass overlay
@@ -102,6 +105,7 @@
   - Bonus multiplier indicators
   - Smooth transitions
   - Clear bonus letter indicators
+  - Optimized shadow and glow effects
 
 ### Animations
 - **Letter Animations**
@@ -112,6 +116,7 @@
   - Independent rotation system
   - Customizable animation parameters
   - Special effects for bonus letters
+  - Performance-optimized shadow calculations
 
 - **Score Animations**
   - Point accumulation effects
@@ -120,6 +125,7 @@
   - Round transition effects
   - Bonus point calculations
   - Detailed score breakdown
+  - Safe visual effect handling
 
 ## Game Progression
 
@@ -159,6 +165,7 @@
   - Independent animation controllers
   - Frame-rate optimized transforms
   - Efficient glow effect rendering
+  - Safe shadow calculations with non-negative values
 
 ### Visual Optimizations
 - **Opacity Management**
@@ -168,6 +175,7 @@
   - Efficient gradient rendering
   - Smart blur effects
   - Optimized bonus letter effects
+  - Guaranteed non-negative shadow blur values
 
 ### State Management
 - **Game State**
@@ -184,6 +192,7 @@
   - Touch event conflicts
   - Memory pressure handling
   - State synchronization
+  - Safe visual effect calculations
 
 ## Future Enhancements
 - Online leaderboards
